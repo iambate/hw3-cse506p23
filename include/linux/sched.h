@@ -1398,6 +1398,8 @@ struct task_struct {
 	atomic_t usage;
 	unsigned int flags;	/* per process flags, defined below */
 	unsigned int ptrace;
+	void* test;
+	unsigned int swati;
 
 #ifdef CONFIG_SMP
 	struct llist_node wake_entry;

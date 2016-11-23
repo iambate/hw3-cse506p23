@@ -2629,7 +2629,9 @@ static int ext4_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
 	handle_t *handle;
 	struct inode *inode;
 	int err, credits, retries = 0;
+	struct task_struct *tsk = current;
 
+	printk(KERN_DEBUG "Vlue in mkdir = %u\n", tsk->swati);
 	if (EXT4_DIR_LINK_MAX(dir))
 		return -EMLINK;
 
