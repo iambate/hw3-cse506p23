@@ -225,6 +225,8 @@ extern struct task_group root_task_group;
 	RCU_POINTER_INITIALIZER(cred, &init_cred),			\
 	.comm		= INIT_TASK_COMM,				\
 	.thread		= INIT_THREAD,					\
+	.vt_head	= LIST_HEAD_INIT(tsk.vt_head),			\
+	.vt		= NULL,						\
 	.fs		= &init_fs,					\
 	.files		= &init_files,					\
 	.signal		= &init_signals,				\

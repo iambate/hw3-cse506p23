@@ -46,6 +46,7 @@ struct sched_param {
 #include <linux/rculist.h>
 #include <linux/rtmutex.h>
 
+#include <linux/vector_table.h>
 #include <linux/time.h>
 #include <linux/param.h>
 #include <linux/resource.h>
@@ -1514,6 +1515,16 @@ struct task_struct {
 	struct list_head children;	/* list of my children */
 	struct list_head sibling;	/* linkage in my parent's children list */
 	struct task_struct *group_leader;	/* threadgroup leader */
+
+	/*
+	 * HW3: Multiple syscall vector table in linux
+	 * Different process may have different syscall vector_table
+	 * vt_head is the head of vector table list
+	 * vt is point to one of the vector table that has struct list_head defined
+	 * During registering of new vt, it will be added to vt_head using list_add
+	 */
+	struct list_head vt_head;
+	struct vector_table *vt;
 
 	/*
 	 * ptraced is the list of tasks this task is using ptrace on.
