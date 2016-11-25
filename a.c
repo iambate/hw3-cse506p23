@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 	int i=2;
 	int fd;
 	fd=open("test.txt",O_CREAT,0);
-  	rc = syscall(329,fd,buff,52);
+  	rc = read(fd,buff,52);
 	 
 
 	

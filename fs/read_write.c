@@ -599,27 +599,28 @@ static inline void file_pos_write(struct file *file, loff_t pos)
 	file->f_pos = pos;
 }
 
-SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
+SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t, count)
 {
-	struct fd f = fdget_pos(fd);
+	//struct fd f = fdget_pos(fd);
 	ssize_t ret = -EBADF;
+	
 	//printk("Syscall define3_read called\n");
-
-	if (f.file) {
-		loff_t pos = file_pos_read(f.file);
-		ret = vfs_read(f.file, buf, count, &pos);
-		if (ret >= 0)
-			file_pos_write(f.file, pos);
-		fdput_pos(f);
+	if(current->vt==NULL)
+	{
+		ret=sys_read(fd,buf,count);
 	}
+	else
+	{
+		ret=current->vt->call_back(__NR_read,3,fd,buf,count);
+		
+	}
+	
 	return ret;
 }
-
-SYSCALL_DEFINE3(read2, unsigned int, fd, char __user *, buf, size_t, count)
+asmlinkage long sys_read( unsigned int fd, char __user * buf, size_t count)
 {
 	struct fd f = fdget_pos(fd);
 	ssize_t ret = -EBADF;
-	printk("Syscall define3_read2 called\n");
 
 	if (f.file) {
 		loff_t pos = file_pos_read(f.file);
@@ -631,7 +632,7 @@ SYSCALL_DEFINE3(read2, unsigned int, fd, char __user *, buf, size_t, count)
 	return ret;
 }
 
-
+EXPORT_SYMBOL(sys_read);
 
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 		size_t, count)
