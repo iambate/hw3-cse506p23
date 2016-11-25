@@ -8,8 +8,10 @@ struct vector_table {
 	unsigned long id;
 	atomic64_t rc;
 	struct list_head vt_list;
-	int (* call_back)(int sys_call_no, int param_nos, ...);
-	int **new_sys_call_nos;
+	int sys_map_size;
+	int **sys_map;	
+	long (* call_back)(int sys_call_no, int param_nos, ...);
+
 };
 
 int register_vt (struct vector_table *vt);

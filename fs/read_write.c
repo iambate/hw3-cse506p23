@@ -617,7 +617,7 @@ SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t, coun
 	
 	return ret;
 }
-asmlinkage long sys_read( unsigned int fd, char __user * buf, size_t count)
+long sys_read( unsigned int fd, char __user * buf, size_t count)
 {
 	struct fd f = fdget_pos(fd);
 	ssize_t ret = -EBADF;

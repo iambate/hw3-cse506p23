@@ -21,7 +21,7 @@ int call_var(int num, ...){
   int g;
   char *tmp;
   unsigned long h;
-  float i;
+  //float i;
   char j;
   //int z;
 

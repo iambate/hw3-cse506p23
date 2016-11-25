@@ -69,6 +69,9 @@ extern int leases_enable, lease_break_time;
 extern int sysctl_protected_symlinks;
 extern int sysctl_protected_hardlinks;
 
+//added functions
+extern long sys_read( unsigned int fd, char __user * buf, size_t count);
+
 struct buffer_head;
 typedef int (get_block_t)(struct inode *inode, sector_t iblock,
 			struct buffer_head *bh_result, int create);
