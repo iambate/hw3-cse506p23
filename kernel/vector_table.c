@@ -9,7 +9,7 @@
 
 DEFINE_RWLOCK(vt_rwlock);
 static struct vector_table vt_head = {
-	.id = 0
+	.id = 0,
 	.vt_list = LIST_HEAD_INIT(vt_head.vt_list)
 };
 
@@ -46,18 +46,21 @@ int deregister_vt (struct vector_table *vt)
 		return 0;
 	}
 	write_lock(&vt_rwlock);
+	list_del(&vt->vt_list);
+	/*
 	list_for_each_safe(pos, tmp_lh, &(vt_head.vt_list)) {
 		tmp_vt = list_entry(pos, struct vector_table, vt_list);
-		if (tmp_vt == vt) {
+		printk("\ntmp_vt id: %lu\n", tmp_vt->id);
+		printk("tmp_vt: %p\n", tmp_vt);
+		if (tmp_vt->id == vt->id) {
 			if (atomic64_read(&vt->rc) != 0) {
 				err = -1;
 				goto out;
 			} else {
-				list_del(pos);
-				break;
+				printk("Deleting now\n");
 			}
 		}
-	}
+	}*/
 out:
 	write_unlock(&vt_rwlock);
 	return err;
@@ -85,7 +88,7 @@ int deregister_vt_id (int vt_id)
 				err = -1;
 				goto out;
 			} else {
-				list_del(pos);
+				list_del(&tmp_vt->vt_list);
 				break;
 			}
 		}
