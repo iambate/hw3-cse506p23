@@ -1025,13 +1025,35 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 	putname(tmp);
 	return fd;
 }
-
-SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
+asmlinkage long sys_open(const char __user *filename,int flags, umode_t mode)
 {
 	if (force_o_largefile())
-		flags |= O_LARGEFILE;
+                flags |= O_LARGEFILE;
 
-	return do_sys_open(AT_FDCWD, filename, flags, mode);
+        return do_sys_open(AT_FDCWD, filename, flags, mode);
+
+}
+EXPORT_SYMBOL(sys_open);
+SYSCALL_DEFINE3(open_wrapper, const char __user *, filename, int, flags, umode_t, mode)
+{
+	int i=0,ret=0;
+
+        if(current->vt==NULL)
+        {
+           ret= sys_open(filename,flags,mode);
+         }
+         else                                                      
+	 {
+              //i=isimplemented(__NR_read,current->vt)
+              if(i==0)
+             	 ret=current->vt->call_back(__NR_open,3,filename,flags,mode);
+              else
+                  ret=sys_open(filename,flags,mode);
+         }
+        
+
+
+	return ret;
 }
 
 SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
@@ -1087,18 +1109,41 @@ EXPORT_SYMBOL(filp_close);
  * releasing the fd. This ensures that one clone task can't release
  * an fd while another clone is opening it.
  */
-SYSCALL_DEFINE1(close, unsigned int, fd)
+SYSCALL_DEFINE1(close_wrapper, unsigned int, fd)
 {
+	int i=0,ret=0;
+
+	 if(current->vt==NULL)
+        {
+           ret= sys_close(fd);
+         }
+         else
+         {
+              //i=isimplemented(__NR_read,current->vt)
+              if(i==0)
+               		ret=current->vt->call_back(__NR_close,1,fd);
+              else
+                     	 ret=sys_close(fd);
+	
+         }
+
+        return ret;      
+	              
+}
+asmlinkage long sys_close(unsigned int fd)
+{
+	
 	int retval = __close_fd(current->files, fd);
 
-	/* can't restart close syscall because file table entry was cleared */
-	if (unlikely(retval == -ERESTARTSYS ||
-		     retval == -ERESTARTNOINTR ||
-		     retval == -ERESTARTNOHAND ||
-		     retval == -ERESTART_RESTARTBLOCK))
-		retval = -EINTR;
+        /* can't restart close syscall because file table entry was cleared */
+        if (unlikely(retval == -ERESTARTSYS ||
+                     retval == -ERESTARTNOINTR ||
+                     retval == -ERESTARTNOHAND ||
+                     retval == -ERESTART_RESTARTBLOCK))
+                retval = -EINTR;
 
-	return retval;
+        return retval;
+
 }
 EXPORT_SYMBOL(sys_close);
 

@@ -110,6 +110,8 @@ int main(int argc, char **argv)
 	
 	free(buff);
   close(rc);
-
-*/	exit(rc);
+	clo
+*/	
+close(fd);
+exit(rc);
 }
