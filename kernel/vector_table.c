@@ -9,6 +9,7 @@
 
 DEFINE_RWLOCK(vt_rwlock);
 static struct vector_table vt_head = {
+	.id = 0
 	.vt_list = LIST_HEAD_INIT(vt_head.vt_list)
 };
 
@@ -94,3 +95,24 @@ out:
 	return err;
 }
 EXPORT_SYMBOL(deregister_vt_id);
+
+/*
+ * Tells is a syscall is implemented by current's vector table
+ * 1 : default
+ * 0 : call the vector table's callback function
+ * -1: not implemented sys_call
+ */
+int is_implemented_by_vt (int sys_call_no){
+	int **sys_map, sys_map_size, i;
+	if (current->vt != NULL) {
+		sys_map = current->vt->sys_map;
+		sys_map_size = current->vt->sys_map_size;
+		for (i = 0; i < sys_map_size; i++) {
+			if (sys_call_no == sys_map[i][0]) {
+				return sys_map[i][1];
+			}
+		}
+	}
+	return 1;
+}
+EXPORT_SYMBOL(is_implemented_by_vt);
