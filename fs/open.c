@@ -31,7 +31,7 @@
 #include <linux/ima.h>
 #include <linux/dnotify.h>
 #include <linux/compat.h>
-
+#include<linux/vector_table.h>
 #include "internal.h"
 
 int do_truncate(struct dentry *dentry, loff_t length, unsigned int time_attrs,
@@ -1037,20 +1037,24 @@ EXPORT_SYMBOL(sys_open);
 SYSCALL_DEFINE3(open_wrapper, const char __user *, filename, int, flags, umode_t, mode)
 {
 	int i=0,ret=0;
-
-        if(current->vt==NULL)
+        i=is_implemented_by_vt(__NR_open);
+        if(i==1)
         {
            ret= sys_open(filename,flags,mode);
-         }
-         else                                                      
-	 {
-              //i=isimplemented(__NR_read,current->vt)
-              if(i==0)
-             	 ret=current->vt->call_back(__NR_open,3,filename,flags,mode);
-              else
-                  ret=sys_open(filename,flags,mode);
-         }
-        
+
+        }
+        else if(i==0)
+        {	
+		if(current->vt->call_back==NULL)
+		 	 ret=-EFAULT;
+		else
+                	 ret=current->vt->call_back(__NR_open,3,filename,flags,mode);
+
+        }
+	else
+	{
+             	 ret=i;
+	}
 
 
 	return ret;
@@ -1061,8 +1065,8 @@ SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
 {
 	if (force_o_largefile())
 		flags |= O_LARGEFILE;
-
 	return do_sys_open(dfd, filename, flags, mode);
+	
 }
 
 #ifndef __alpha__
@@ -1112,20 +1116,25 @@ EXPORT_SYMBOL(filp_close);
 SYSCALL_DEFINE1(close_wrapper, unsigned int, fd)
 {
 	int i=0,ret=0;
-
-	 if(current->vt==NULL)
+        i=is_implemented_by_vt(__NR_close);
+        if(i==1)
         {
            ret= sys_close(fd);
-         }
-         else
-         {
-              //i=isimplemented(__NR_read,current->vt)
-              if(i==0)
-               		ret=current->vt->call_back(__NR_close,1,fd);
-              else
-                     	 ret=sys_close(fd);
-	
-         }
+
+        }
+        else if(i==0)
+        {	
+		if(current->vt->call_back==NULL)
+		 	 ret=-EFAULT;
+		else
+                	 ret=current->vt->call_back(__NR_close,1,fd);
+
+        }
+	else
+	{
+             	 ret=i;
+	}
+
 
         return ret;      
 	              
