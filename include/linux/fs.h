@@ -71,6 +71,8 @@ extern int sysctl_protected_hardlinks;
 
 //added functions
 extern long sys_read( unsigned int fd, char __user * buf, size_t count);
+extern long sys_open(const char __user *filename,int flags, umode_t mode);
+extern long sys_close(unsigned int fd);
 
 struct buffer_head;
 typedef int (get_block_t)(struct inode *inode, sector_t iblock,

@@ -44,7 +44,7 @@ int read_vt_1(unsigned int fd, char __user *buf, size_t count)
 	int ret = 0;
 
 #if Debug
-	printk(KERN_INFO "fd = %u, buf = %p, count = %lu\n", fd, buf, (unsigned long)count);
+	printk(KERN_INFO "read_vt_1 fd = %u, buf = %p, count = %lu\n", fd, buf, (unsigned long)count);
 #endif
 	ret = sys_read(fd, buf, count);
 #if Debug
@@ -57,6 +57,9 @@ long callback_sys_vector_1(int sys_call_no, int param_num, ...)
 {
 	long ret = 0;
 	va_list valist;
+	unsigned int fd;
+	char *buf = NULL;
+	size_t count = 0;
 	va_start(valist, param_num);
 
 	switch(sys_call_no){
@@ -66,7 +69,11 @@ long callback_sys_vector_1(int sys_call_no, int param_num, ...)
 #if Debug
 		printk(KERN_INFO "inside case __NR_read\n");
 #endif		
-		ret = read_vt_1(va_arg(valist, unsigned int), va_arg(valist, char*), va_arg(valist, size_t));
+		fd = va_arg(valist, unsigned int);
+		buf = va_arg(valist, char*);
+		count = va_arg(valist, size_t);
+		printk("in cb fd = %u, buf = %p, count = %lu\n", fd, buf, (unsigned long)count);
+		ret = read_vt_1(fd, buf, count);
 #if Debug
 		printk(KERN_INFO "ret from read_vt_1 is %ld\n", ret);
 #endif
@@ -83,10 +90,25 @@ long callback_sys_vector_1(int sys_call_no, int param_num, ...)
 	return ret;
 }
 
+void delete_sys_vector_1(void)
+{
+	int i;
+
+	if (vt_1 && vt_1->sys_map) {
+		for (i = 0; i < VT_1_NUMBER; i++) {
+			if(vt_1->sys_map[i])
+				kfree(vt_1->sys_map[i]);
+		}
+		kfree(vt_1->sys_map);
+	}
+	kfree(vt_1);
+	vt_1 = NULL;
+}
+
 void create_sys_vector_1(void)
 {
 	int i;
-	int err;
+	int err = 1;
 
 	vt_1 = kmalloc(sizeof(struct vector_table), GFP_KERNEL);
 	vt_1->call_back = &callback_sys_vector_1;
@@ -108,23 +130,9 @@ void create_sys_vector_1(void)
 	}
 }
 
-void delete_sys_vector_1(void)
-{
-	int i;
-
-	if (vt_1 && vt_1->sys_map) {
-		for (i = 0; i < VT_1_NUMBER; i++) {
-			if(vt_1->sys_map[i])
-				kfree(vt_1->sys_map[i]);
-		}
-		kfree(vt_1->sys_map);
-	}
-	kfree(vt_1);
-	vt_1 = NULL;
-}
-
 void deregister_sys_vector_1(void)
 {
+	printk("deregister vector 1 = %p\n", vt_1);
 	if (vt_1){
 		deregister_vt(vt_1);
 		delete_sys_vector_1();
@@ -134,28 +142,32 @@ void deregister_sys_vector_1(void)
 void test_function(void)
 {
 	char *tp = NULL;
-	struct file *infile = NULL;
-	int fd;
+	//struct file *infile = NULL;
+	unsigned int fd = 999;
 	int err = 0;
+        mm_segment_t oldfs;
 
-	fd = file_open("./tp.c", O_RDONLY, 0, &infile);
+        oldfs = get_fs();
+        set_fs(get_ds());
+	fd = sys_open("test.txt", O_RDONLY, 0);
 	printk("fd = %u\n", fd);
 	if (fd >= 0) {
 		tp = kmalloc(sizeof(char)*11, GFP_KERNEL);
 		if (err < 0) {
-			printk("error opening %s:%d","./tp.c", err);
+			printk("error opening %s:%d","./var_arg.c", err);
 		}
-		printk("value of cb is = %ld\n", vt_1->call_back(__NR_read, 3, 3, tp, 10));
+		printk("value of cb is = %ld\n", vt_1->call_back(__NR_read, 3, fd, tp, 10));
 		tp[10] = '\0';
 		printk("string is %s\n", tp);
 		sys_close(fd);
 	}
+	set_fs(oldfs);
 }
 
 void register_all_sys_vectors(void)
 {
 	create_sys_vector_1();
-	//test_function();
+	test_function();
 }
 
 void deregister_all_sys_vectors(void)

@@ -1025,7 +1025,7 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 	putname(tmp);
 	return fd;
 }
-asmlinkage long sys_open(const char __user *filename,int flags, umode_t mode)
+long sys_open(const char __user *filename,int flags, umode_t mode)
 {
 	if (force_o_largefile())
                 flags |= O_LARGEFILE;
@@ -1130,7 +1130,7 @@ SYSCALL_DEFINE1(close_wrapper, unsigned int, fd)
         return ret;      
 	              
 }
-asmlinkage long sys_close(unsigned int fd)
+long sys_close(unsigned int fd)
 {
 	
 	int retval = __close_fd(current->files, fd);
