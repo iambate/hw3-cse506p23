@@ -16,7 +16,6 @@
 #include <linux/buffer_head.h>
 #include <linux/falloc.h>
 #include "internal.h"
-
 #include <asm/ioctls.h>
 
 /* So that the fiemap access checks can't overflow on 32 bit machines. */
@@ -616,8 +615,31 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 	int error = 0;
 	int __user *argp = (int __user *)arg;
 	struct inode *inode = file_inode(filp);
-
+	struct var_args *k_args, *tp_args;
+	
 	switch (cmd) {
+	case SET_FLAG:
+		printk("fd=%u\n", fd);
+		printk("cmd=%u\n", cmd);
+		printk("arg=%lu\n", arg);
+		tp_args = (struct var_args *)arg;
+	
+		printk("k_args->vector_table=%s\n", tp_args->vector_table);
+		printk("k_args->pid=%s\n", tp_args->process_id);
+		printk("k_args->all=%d\n", tp_args->all);
+		
+		k_args = kmalloc(sizeof(struct var_args),GFP_KERNEL);
+		copy_from_user(k_args, arg, sizeof(struct var_args));
+		printk("k_args->vector_table=%s\n", k_args->vector_table);
+		printk("k_args->pid=%s\n", k_args->process_id);
+		printk("k_args->all=%d\n", k_args->all);
+		printk("SET_FLAG\n");
+		break;
+	/*
+	case GET_FLAG:
+		copy_to_user((struct var_args *)arg, (struct var_args *)&k_args, sizeof(struct var_args));
+		break;
+	*/
 	case FIOCLEX:
 		set_close_on_exec(fd, 1);
 		break;
@@ -681,7 +703,7 @@ SYSCALL_DEFINE3(ioctl, unsigned int, fd, unsigned int, cmd, unsigned long, arg)
 {
 	int error;
 	struct fd f = fdget(fd);
-
+	//printk("Inside Syscall_define3: ioctl.c\n");
 	if (!f.file)
 		return -EBADF;
 	error = security_file_ioctl(f.file, cmd, arg);
