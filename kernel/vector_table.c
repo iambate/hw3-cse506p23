@@ -23,6 +23,12 @@ int register_vt (struct vector_table *vt)
 	if (vt == NULL) {
 		return 0;
 	}
+
+	if (vt_head.id != 0) {
+		printk("ID of head is not zero\n");
+		return 0;
+	}
+	atomic64_set(&(vt->rc), 0);
 	write_lock(&vt_rwlock);
 	vt->id = counter++;
 	list_add(&(vt->vt_list), &(vt_head.vt_list));
@@ -46,8 +52,6 @@ int deregister_vt (struct vector_table *vt)
 		return 0;
 	}
 	write_lock(&vt_rwlock);
-	list_del(&vt->vt_list);
-	/*
 	list_for_each_safe(pos, tmp_lh, &(vt_head.vt_list)) {
 		tmp_vt = list_entry(pos, struct vector_table, vt_list);
 		printk("\ntmp_vt id: %lu\n", tmp_vt->id);
@@ -57,10 +61,11 @@ int deregister_vt (struct vector_table *vt)
 				err = -1;
 				goto out;
 			} else {
+				list_del(&vt->vt_list);
 				printk("Deleting now\n");
 			}
 		}
-	}*/
+	}
 out:
 	write_unlock(&vt_rwlock);
 	return err;
@@ -88,7 +93,7 @@ int deregister_vt_id (int vt_id)
 				err = -1;
 				goto out;
 			} else {
-				list_del(&tmp_vt->vt_list);
+				list_del(pos);
 				break;
 			}
 		}
@@ -106,16 +111,25 @@ EXPORT_SYMBOL(deregister_vt_id);
  * -1: not implemented sys_call
  */
 int is_implemented_by_vt (int sys_call_no){
-	int **sys_map, sys_map_size, i;
+	int **sys_map, sys_map_size, i, err = 1;
 	if (current->vt != NULL) {
 		sys_map = current->vt->sys_map;
 		sys_map_size = current->vt->sys_map_size;
 		for (i = 0; i < sys_map_size; i++) {
 			if (sys_call_no == sys_map[i][0]) {
-				return sys_map[i][1];
+				if (sys_map[i][1] == -1) {
+					err = -ENOTSUPP;
+					break;
+				} else if (sys_map[i][1] == 0) {
+					err = 0;
+					break;
+				} else {
+					err = -EFAULT;
+					break;
+				}
 			}
 		}
 	}
-	return 1;
+	return err;
 }
 EXPORT_SYMBOL(is_implemented_by_vt);
