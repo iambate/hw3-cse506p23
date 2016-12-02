@@ -35,7 +35,6 @@ int register_vt (struct vector_table *vt)
 	write_unlock(&vt_rwlock);
 	return vt->id;
 }
-
 EXPORT_SYMBOL(register_vt);
 
 /*
@@ -54,8 +53,6 @@ int deregister_vt (struct vector_table *vt)
 	write_lock(&vt_rwlock);
 	list_for_each_safe(pos, tmp_lh, &(vt_head.vt_list)) {
 		tmp_vt = list_entry(pos, struct vector_table, vt_list);
-		printk("\ntmp_vt id: %lu\n", tmp_vt->id);
-		printk("tmp_vt: %p\n", tmp_vt);
 		if (tmp_vt->id == vt->id) {
 			if (atomic64_read(&vt->rc) != 0) {
 				err = -1;

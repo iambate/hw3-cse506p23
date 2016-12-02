@@ -22,7 +22,7 @@ static int __init init_sys_mergesort(void)
 		printk("VT is null\n");
 	for(i = 0;i < 7; i++){
 		rc = register_vt(vt[i]);
-		printk("register_vt returned: %d\n id: \n", rc, rc->id);
+		printk("register_vt returned: %d\n id: %lu\n", rc, vt[i]->id);
 	}
 	return 0;
 }

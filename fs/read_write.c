@@ -604,25 +604,23 @@ SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t, coun
 	//struct fd f = fdget_pos(fd);
 	ssize_t ret = -EBADF;
 	int i;
-	i=is_implemented_by_vt(__NR_read);
-	if(i==1)
-	{
-		ret=sys_read(fd,buf,count);
+	i = is_implemented_by_vt(__NR_read);
+	if(i == 1) {
+		ret = sys_read(fd,buf,count);
 	}
-	
-	else if(i==0)
-	{	if(current->vt->call_back==NULL)
-			ret=-EFAULT;
+
+	else if(i==0) {
+		if(current->vt->call_back==NULL)
+			ret = -EFAULT;
 		else
 			ret=current->vt->call_back(__NR_read,3,fd,buf,count);
 		
-	}
-	else
-	{
-		ret=i;
+	} else {
+		ret = i;
 	}
 	return ret;
 }
+
 long sys_read( unsigned int fd, char __user * buf, size_t count)
 {
 	struct fd f = fdget_pos(fd);
@@ -637,7 +635,6 @@ long sys_read( unsigned int fd, char __user * buf, size_t count)
 	}
 	return ret;
 }
-
 EXPORT_SYMBOL(sys_read);
 
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
