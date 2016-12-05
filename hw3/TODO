@@ -1,2 +1,18 @@
 -----Sagar--------
 1. Remove files tp.c, tp2.c from hw3 folder
+
+
+-----Kunal-------
+1. Remove var_arg.c
+2. Remove unnecessary make commands from make file
+3. Check for how to stop rmmod in case there is a vector in use
+
+
+----General------
+1. IOCTL 3 programs
+2. User programs
+3. Clone system call
+4. Extended sys_wrappers
+5. Extended wrapper for modules
+6. Assign vector table(locks)
+7. Need to create install_module.sh for all modules that needs to be installed
