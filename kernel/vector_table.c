@@ -1,3 +1,4 @@
+#include <asm-generic/uaccess.h>
 #include <linux/types.h>
 #include <linux/spinlock_types.h>
 #include <linux/spinlock.h>
@@ -6,6 +7,7 @@
 #include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/export.h>
+#include <linux/vmalloc.h>
 
 DEFINE_RWLOCK(vt_rwlock);
 static struct vector_table vt_head = {
@@ -146,8 +148,33 @@ struct vector_table *get_vt (int vt_id)
 			rc_vt = tmp_vt;
 		}
 	}
-out:
 	read_unlock(&vt_rwlock);
 	return rc_vt;
 }
 EXPORT_SYMBOL(get_vt);
+
+/*
+ * return a user array for ioctl of maximum 1024 length
+ */
+struct vt_id_list *get_vt_id_list(void)
+{
+	/*
+	 * vt_ids can be max 1024
+	 */
+	int count = 0, *vt_ids = kmalloc(sizeof(int)*1024, GFP_KERNEL);
+	struct vt_id_list *_vt_id_list = kmalloc(sizeof(struct vt_id_list), GFP_KERNEL);
+	struct vector_table *tmp_vt;
+	read_lock(&vt_rwlock);
+	list_for_each_entry(tmp_vt, &(vt_head.vt_list), vt_list) {
+		vt_ids[count] = tmp_vt->id;
+		count ++;
+		if (count >= 1024)
+			break;
+	}
+	read_unlock(&vt_rwlock);
+	_vt_id_list->vt_ids = vmalloc_user(count * sizeof(int));
+	copy_to_user(_vt_id_list->vt_ids, vt_ids, count * sizeof(int));
+	_vt_id_list->vt_ids_count = count;
+	kfree(vt_ids);
+	return _vt_id_list;
+}
