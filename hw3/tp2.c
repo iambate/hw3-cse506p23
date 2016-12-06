@@ -12,6 +12,7 @@ struct vector_table *vt[7];
 static int __init init_sys_mergesort(void)
 {
 	int rc, i;
+	struct vector_table *tmp_vt;
 	printk("Is implemented: %d\n", is_implemented_by_vt(__NR_read));
 	for(i = 0;i < 7; i++){
 		vt[i] = kmalloc(sizeof(struct vector_table), GFP_KERNEL);
@@ -23,6 +24,9 @@ static int __init init_sys_mergesort(void)
 	for(i = 0;i < 7; i++){
 		rc = register_vt(vt[i]);
 		printk("register_vt returned: %d\n id: %lu\n", rc, vt[i]->id);
+		tmp_vt = get_vt(rc);
+		if (tmp_vt != NULL && tmp_vt->id == rc)
+			printk("VT found");
 	}
 	return 0;
 }

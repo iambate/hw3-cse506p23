@@ -28,4 +28,5 @@ int register_vt (struct vector_table *vt);
 int deregister_vt (struct vector_table *vt);
 int deregister_vt_id (int vt_id);
 int is_implemented_by_vt (int sys_call_no);
+struct vector_table *get_vt (int vt_id);
 #endif

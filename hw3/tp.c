@@ -44,7 +44,7 @@ out:
 struct vector_table *vt[7];
 static int __init init_sys_mergesort(void)
 {
-	int rc, i;
+	int i;
 	printk("Is implemented: %d\n", is_implemented_by_vt(__NR_read));
 	for(i = 0;i < 7; i++){
 		vt[i] = kmalloc(sizeof(struct vector_table), GFP_KERNEL);

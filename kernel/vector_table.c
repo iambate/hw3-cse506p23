@@ -91,7 +91,6 @@ int deregister_vt_id (int vt_id)
 				goto out;
 			} else {
 				list_del(pos);
-				break;
 			}
 		}
 	}
@@ -130,3 +129,25 @@ int is_implemented_by_vt (int sys_call_no){
 	return err;
 }
 EXPORT_SYMBOL(is_implemented_by_vt);
+
+/*
+ * return NULL on error
+ * else return the unique vector having the vector ID
+ */
+struct vector_table *get_vt (int vt_id)
+{
+	struct vector_table *tmp_vt, *rc_vt = NULL;
+	if (vt_id < 1) {
+		return NULL;
+	}
+	read_lock(&vt_rwlock);
+	list_for_each_entry(tmp_vt, &(vt_head.vt_list), vt_list) {
+		if (tmp_vt->id == vt_id) {
+			rc_vt = tmp_vt;
+		}
+	}
+out:
+	read_unlock(&vt_rwlock);
+	return rc_vt;
+}
+EXPORT_SYMBOL(get_vt);
