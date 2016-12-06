@@ -200,7 +200,6 @@ extern struct task_group root_task_group;
 	.cpus_allowed	= CPU_MASK_ALL,					\
 	.nr_cpus_allowed= NR_CPUS,                                      \
 	.test           = NULL,						\
-	.swati		= 123,					        \
 	.mm		= NULL,						\
 	.active_mm	= &init_mm,					\
 	.restart_block = {						\

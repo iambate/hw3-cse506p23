@@ -23,12 +23,22 @@ int pass_to_kernel(int argc, char **argv){
 	args->process_id = NULL;
 	args->vector_table = NULL;
 	args->all = 0;	
+	filepath = "/dev/zero"; 
 
-	if (argc == 2){
-		if(strcmp(argv[1], "getall") == 0){
+	if ((fdesc = open(filepath, O_RDONLY)) < 0) {
+			perror("Error in creating a file");
+			return -1;
+	}
+
+	if (argc == 2) {
+		if(strcmp(argv[1], "getall") == 0) {
 			printf("Argument = getall\n");
 			args->all = 1;		
 			printf("args->all: %d\n", args->all);
+			retVal = ioctl(fdesc,GET_FLAG,(unsigned long)args);
+			perror("return");
+			printf("Return Value of ioctl: %d\n",retVal);
+			printf("Current value in all: %d\n", args->all);
 		}
 	}	
 	
@@ -37,21 +47,11 @@ int pass_to_kernel(int argc, char **argv){
 		args->vector_table = argv[2];
 		printf("Process ID: %s\n", args->process_id);
 		printf("Vector Table: %s\n", args->vector_table);
+		retVal = ioctl(fdesc,SET_FLAG,(unsigned long)args);
+		//printf("arg address=%lu\n",(unsigned long)args);
+		perror("return");
+		printf("Return Value of ioctl: %d\n",retVal);
 	}
-	
-	filepath = "/dev/zero"; 
-
-	if ((fdesc = open(filepath, O_RDONLY)) < 0) {
-			perror("Error in creating a file");
-			return -1;
-	}
-
-	retVal = ioctl(fdesc,SET_FLAG,(unsigned long)&args);
-	printf("arg address=%lu\n",(unsigned long)&args);
-	perror("return");
-	printf("Return Value of ioctl: %d",retVal);
-
-	//retVal = ioctl(fdesc,GET_FLAG,&args);
 
 	return 0;
 }
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-
+//testing 
 
 
 

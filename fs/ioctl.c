@@ -624,9 +624,9 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		printk("arg=%lu\n", arg);
 		tp_args = (struct var_args *)arg;
 	
-		printk("k_args->vector_table=%s\n", tp_args->vector_table);
-		printk("k_args->pid=%s\n", tp_args->process_id);
-		printk("k_args->all=%d\n", tp_args->all);
+		printk("tp_args->vector_table=%s\n", tp_args->vector_table);
+		printk("tp_args->pid=%s\n", tp_args->process_id);
+		printk("tp_args->all=%d\n", tp_args->all);
 		
 		k_args = kmalloc(sizeof(struct var_args),GFP_KERNEL);
 		copy_from_user(k_args, arg, sizeof(struct var_args));
@@ -634,12 +634,20 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		printk("k_args->pid=%s\n", k_args->process_id);
 		printk("k_args->all=%d\n", k_args->all);
 		printk("SET_FLAG\n");
+		
+		if ((k_args->vector_table != NULL) && (k_args->process_id != NULL) && (k_args->all == 0)) {
+			
+		}
+		
 		break;
-	/*
 	case GET_FLAG:
-		copy_to_user((struct var_args *)arg, (struct var_args *)&k_args, sizeof(struct var_args));
+		k_args = kmalloc(sizeof(struct var_args),GFP_KERNEL);
+		k_args->all = 999;
+		printk("GET_FLAG\n");
+		copy_to_user(arg, k_args, sizeof(struct var_args));
+		
 		break;
-	*/
+
 	case FIOCLEX:
 		set_close_on_exec(fd, 1);
 		break;
