@@ -16,14 +16,15 @@ int pass_to_kernel(int argc, char **argv){
 	char* filepath;
 	int fdesc = 0;
 	int retVal = 0;
+	int i;
 		
 	struct var_args *args;
-	args = (struct var_args*)malloc(sizeof(struct var_args));
+	struct vt_id_list *vt;
 	
-	args->process_id = NULL;
-	args->vector_table = NULL;
-	args->all = 0;	
-	filepath = "/dev/zero"; 
+	//args->process_id = NULL;
+	//args->vector_table_id = NULL;
+
+	filepath = "/dev/zero";
 
 	if ((fdesc = open(filepath, O_RDONLY)) < 0) {
 			perror("Error in creating a file");
@@ -32,21 +33,25 @@ int pass_to_kernel(int argc, char **argv){
 
 	if (argc == 2) {
 		if(strcmp(argv[1], "getall") == 0) {
+			vt = (struct vt_id_list*)malloc(sizeof(struct vt_id_list));
+			//if (vt<0):
 			printf("Argument = getall\n");
-			args->all = 1;		
-			printf("args->all: %d\n", args->all);
-			retVal = ioctl(fdesc,GET_FLAG,(unsigned long)args);
+			retVal = ioctl(fdesc,GET_FLAG,(unsigned long)vt);
 			perror("return");
 			printf("Return Value of ioctl: %d\n",retVal);
-			printf("Current value in all: %d\n", args->all);
+			printf("Number of Vector Tables: %d\n", vt->vt_ids_count);
+			for (i=0; i < (vt->vt_ids_count);i++) {
+				printf("Vector Table ID: %d\n", vt->vt_ids[i]);
+			}
 		}
-	}	
+	}
 	
 	else if(argc == 3) {
+		args = (struct var_args*)malloc(sizeof(struct var_args));
 		args->process_id = argv[1];
-		args->vector_table = argv[2];
-		printf("Process ID: %s\n", args->process_id);
-		printf("Vector Table: %s\n", args->vector_table);
+		args->vector_table_id = argv[2];
+		printf("Process ID: %d\n", args->process_id);
+		printf("Vector Table: %d\n", args->vector_table_id);
 		retVal = ioctl(fdesc,SET_FLAG,(unsigned long)args);
 		//printf("arg address=%lu\n",(unsigned long)args);
 		perror("return");

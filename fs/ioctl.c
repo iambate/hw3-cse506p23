@@ -15,6 +15,7 @@
 #include <linux/writeback.h>
 #include <linux/buffer_head.h>
 #include <linux/falloc.h>
+#include <linux/vector_table.h>
 #include "internal.h"
 #include <asm/ioctls.h>
 
@@ -615,9 +616,12 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 	int error = 0;
 	int __user *argp = (int __user *)arg;
 	struct inode *inode = file_inode(filp);
-	struct var_args *k_args, *tp_args;
+	//struct var_args *k_args, *tp_args;
+	struct vt_id_list *vt;
+	int i;
 	
 	switch (cmd) {
+	/*
 	case SET_FLAG:
 		printk("fd=%u\n", fd);
 		printk("cmd=%u\n", cmd);
@@ -640,11 +644,14 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		}
 		
 		break;
+	*/
+	
 	case GET_FLAG:
-		k_args = kmalloc(sizeof(struct var_args),GFP_KERNEL);
-		k_args->all = 999;
+		vt = kmalloc(sizeof(struct vt_id_list),GFP_KERNEL);
+		vt = get_vt_id_list();
+		printk("Count=%d\n", vt->vt_ids_count);	
 		printk("GET_FLAG\n");
-		copy_to_user(arg, k_args, sizeof(struct var_args));
+		copy_to_user(arg, vt, sizeof(struct vt_id_list));
 		
 		break;
 

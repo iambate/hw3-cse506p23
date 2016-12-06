@@ -18,10 +18,9 @@ struct vector_table {
 
 };
 
-struct var_args{
-		char* process_id;
-		char* vector_table;
-		int all;
+struct var_args {
+	pid_t process_id;
+	int vector_table_id;
 };
 
 struct vt_id_list {
