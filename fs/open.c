@@ -1036,29 +1036,31 @@ long sys_open(const char __user *filename,int flags, umode_t mode)
 EXPORT_SYMBOL(sys_open);
 SYSCALL_DEFINE3(open_wrapper, const char __user *, filename, int, flags, umode_t, mode)
 {
-	int i=0,ret=0;
+
+	long (*open_func)(const char __user * filename, int flags,umode_t mode);
+        ssize_t ret = -EBADF;
+        int i = INT_MAX;
+
         i = is_implemented_by_vt(__NR_open);
-        if (i==INT_MAX)
-        {
-           ret= sys_open(filename,flags,mode);
-
+        if(i == INT_MAX) {
+                ret = sys_open(filename,flags,mode);
         }
-        else if(i >= 0)
-        {	
-		if(current->vt->call_back==NULL)
-		 	 ret=-EFAULT;
-		else
-                	 ret=current->vt->call_back(__NR_open,3,filename,flags,mode);
-
+        else if (i >= 0 && i != INT_MAX) {
+                if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
+                        ret = -EFAULT;
+                else {
+                        open_func = current->vt->sys_map[i].sys_func;
+                        ret = open_func(filename, flags, mode);
+                }
+        } else {
+                ret = i;
         }
-	else
-	{
-             	 ret = i;
-	}
+        return ret;
 
-
-	return ret;
 }
+
+
+
 
 SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
 		umode_t, mode)
@@ -1115,30 +1117,29 @@ EXPORT_SYMBOL(filp_close);
  */
 SYSCALL_DEFINE1(close_wrapper, unsigned int, fd)
 {
-	int i=0,ret=0;
-        i=is_implemented_by_vt(__NR_close);
-        if( i == INT_MAX)
-        {
-           ret= sys_close(fd);
 
+	long (*close_func)( int fd );
+        ssize_t ret = -EBADF;
+        int i = INT_MAX;
+
+        i = is_implemented_by_vt(__NR_close);
+        if(i == INT_MAX) {
+                ret = sys_close(fd);
         }
-        else if (i >= 0)
-        {	
-		if (current->vt->call_back==NULL)
-		 	 ret=-EFAULT;
-		else
-                	 ret=current->vt->call_back(__NR_close,1,fd);
-
+        else if (i >= 0 && i != INT_MAX) {
+                if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
+                        ret = -EFAULT;
+                else {
+                        close_func = current->vt->sys_map[i].sys_func;
+                        ret = close_func(fd);
+                }
+        } else {
+                ret = i;
         }
-	else
-	{
-             	 ret = i;
-	}
+        return ret;
 
-
-        return ret;      
-	              
 }
+
 long sys_close(unsigned int fd)
 {
 	
