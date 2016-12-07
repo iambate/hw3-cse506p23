@@ -196,7 +196,10 @@ asmlinkage extern long (*sysptr)(unsigned long clone_flags,unsigned long newsp,u
 asmlinkage long clone2 (unsigned long clone_flags,unsigned long newsp,uintptr_t parent_tidptr,uintptr_t child_tidptr,unsigned long newtls,int vector_id)
 {
 	pid_t pid;
+	int ret;
 	struct pid *pid_struct;
+	//copy_from_user(parent_tidptr1, parent_tidptr,sizeof(parent_tidptr));
+       // copy_from_user(child_tidptr1, child_tidptr,sizeof(child_tidptr));
 //	struct task_struct *task;
 	struct task_struct *child;
 	printk("Inside clone2\n");
@@ -205,7 +208,18 @@ asmlinkage long clone2 (unsigned long clone_flags,unsigned long newsp,uintptr_t 
 	printk("Pid is:%d\n",pid);
 	pid_struct = find_get_pid(pid);
 	child = pid_task(pid_struct,PIDTYPE_PID);
-	child->vt=change_vt(child,vector_id);
+	ret=change_vt(child,vector_id);
+	//printk("Pid of child is :%d\n",child->vt->id);
+	
+	if(child->vt!=NULL)
+	{
+		printk("Vector id of child is :%d\n",child->vt->id);
+
+	}
+	if(ret<0)
+	{
+		printk("Error while assigning vt:%d\n",ret);
+	}
 	//child=find_task(find_vpid(pid), PIDTYPE_PID)
 	return pid;
 }
