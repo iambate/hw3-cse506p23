@@ -637,8 +637,29 @@ long sys_read( unsigned int fd, char __user * buf, size_t count)
 }
 EXPORT_SYMBOL(sys_read);
 
-SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
+SYSCALL_DEFINE3(write_wrapper, unsigned int, fd, const char __user *, buf,
 		size_t, count)
+{
+	//struct fd f = fdget_pos(fd);
+	ssize_t ret = -EBADF;
+	int i;
+	i = is_implemented_by_vt(__NR_write);
+	if(i == 1) {
+		ret = sys_write(fd,buf,count);
+	}
+	else if(i==0) {
+		if(current->vt->call_back==NULL)
+			ret = -EFAULT;
+		else
+			ret=current->vt->call_back(__NR_write,3,fd,buf,count);
+		
+	} else {
+		ret = i;
+	}
+	return ret;
+}
+
+long sys_write(unsigned int fd, const char __user * buf, size_t count)
 {
 	struct fd f = fdget_pos(fd);
 	ssize_t ret = -EBADF;
@@ -653,6 +674,7 @@ SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 
 	return ret;
 }
+EXPORT_SYMBOL(sys_write);
 
 SYSCALL_DEFINE4(pread64, unsigned int, fd, char __user *, buf,
 			size_t, count, loff_t, pos)

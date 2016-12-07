@@ -7,7 +7,7 @@
 # The abi is "common", "64" or "x32" for this file.
 #
 0	common	read			sys_read_wrapper
-1	common	write			sys_write
+1	common	write			sys_write_wrapper
 2	common	open			sys_open_wrapper
 3	common	close			sys_close_wrapper
 4	common	stat			sys_newstat

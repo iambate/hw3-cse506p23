@@ -42,15 +42,16 @@ int main(int argc, char **argv)
 	void *stack = NULL;
 	void *stack_start;
 	buff = malloc(52*sizeof(char));
+	buff = "This is a test.";
 	int ret;
 	int i=2;
 	int fd;
 	fd=open("test.txt",O_CREAT,0);
-  	rc = read(fd,buff,52);
-	 
-
+  	//rc = read(fd,buff,52);
+	k = write(rc, buff, 12);
 	
-	printf("%d",rc);
+	printf("%d",k);
+
 /*	printf("\nTesting clone() for \"open\" only. So need to use \n");
 	printf("Parent process ID : %d\n", getpid());
 //	ret = open("trctl", 22, 33);

@@ -639,8 +639,7 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		printk("k_args->all=%d\n", k_args->all);
 		printk("SET_FLAG\n");
 		
-		if ((k_args->vector_table != NULL) && (k_args->process_id != NULL) && (k_args->all == 0)) {
-			
+		if ((k_args->vector_table != NULL) && (k_args->process_id != NULL) && (k_args->all == 0)) {	
 		}
 		
 		break;
