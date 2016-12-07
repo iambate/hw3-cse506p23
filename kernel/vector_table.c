@@ -8,6 +8,7 @@
 #include <linux/slab.h>
 #include <linux/export.h>
 #include <linux/vmalloc.h>
+#include <linux/limits.h>
 
 DEFINE_RWLOCK(vt_rwlock);
 static struct vector_table vt_head = {
@@ -104,22 +105,23 @@ EXPORT_SYMBOL(deregister_vt_id);
 
 /*
  * Tells is a syscall is implemented by current's vector table
- * 1 : default
- * 0 : call the vector table's callback function
- * -1: not implemented sys_call
+ * INT_MAX : default
+ * Any Positive Number : call the vector table's callback function
+ * Any Negative Number : not implemented sys_call/error
  */
 int is_implemented_by_vt (int sys_call_no){
-	int **sys_map, sys_map_size, i, err = 1;
-	if (current->vt != NULL) {
-		sys_map = current->vt->sys_map;
+	struct sys_vect *map = NULL;
+	int sys_map_size, i, err = INT_MAX;
+	if (current->vt != NULL && current->vt->sys_map != NULL) {
+		map = current->vt->sys_map;
 		sys_map_size = current->vt->sys_map_size;
 		for (i = 0; i < sys_map_size; i++) {
-			if (sys_call_no == sys_map[i][0]) {
-				if (sys_map[i][1] == -1) {
+			if (sys_call_no == map[i].sys_no) {
+				if (map[i].sys_func == NULL) {
 					err = -ENOTSUPP;
 					break;
-				} else if (sys_map[i][1] == 0) {
-					err = 0;
+				} else if (map[i].sys_func) {
+					err = i;
 					break;
 				} else {
 					err = -EFAULT;

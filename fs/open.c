@@ -1037,13 +1037,13 @@ EXPORT_SYMBOL(sys_open);
 SYSCALL_DEFINE3(open_wrapper, const char __user *, filename, int, flags, umode_t, mode)
 {
 	int i=0,ret=0;
-        i=is_implemented_by_vt(__NR_open);
-        if(i==1)
+        i = is_implemented_by_vt(__NR_open);
+        if (i==INT_MAX)
         {
            ret= sys_open(filename,flags,mode);
 
         }
-        else if(i==0)
+        else if(i >= 0)
         {	
 		if(current->vt->call_back==NULL)
 		 	 ret=-EFAULT;
@@ -1053,7 +1053,7 @@ SYSCALL_DEFINE3(open_wrapper, const char __user *, filename, int, flags, umode_t
         }
 	else
 	{
-             	 ret=i;
+             	 ret = i;
 	}
 
 
@@ -1117,14 +1117,14 @@ SYSCALL_DEFINE1(close_wrapper, unsigned int, fd)
 {
 	int i=0,ret=0;
         i=is_implemented_by_vt(__NR_close);
-        if(i==1)
+        if( i == INT_MAX)
         {
            ret= sys_close(fd);
 
         }
-        else if(i==0)
+        else if (i >= 0)
         {	
-		if(current->vt->call_back==NULL)
+		if (current->vt->call_back==NULL)
 		 	 ret=-EFAULT;
 		else
                 	 ret=current->vt->call_back(__NR_close,1,fd);
@@ -1132,7 +1132,7 @@ SYSCALL_DEFINE1(close_wrapper, unsigned int, fd)
         }
 	else
 	{
-             	 ret=i;
+             	 ret = i;
 	}
 
 

@@ -99,11 +99,11 @@ void delete_sys_vector_1(void)
 	int i;
 
 	if (vt_1 && vt_1->sys_map) {
-		for (i = 0; i < VT_1_NUMBER; i++) {
+		/*for (i = 0; i < VT_1_NUMBER; i++) {
 			if (vt_1->sys_map[i])
 				kfree(vt_1->sys_map[i]);
 		}
-		kfree(vt_1->sys_map);
+		kfree(vt_1->sys_map);*/
 	}
 	kfree(vt_1);
 	vt_1 = NULL;
@@ -127,14 +127,14 @@ void create_sys_vector_1(void)
 	vt_1->sys_map[0][1] = 1;
 	vt_1->sys_map[1][0] = __NR_write;
 	vt_1->sys_map[1][1] = -1;*/
-	vt_1->sys_map = kmalloc(sizeof(struct sys_vect *)*VT_1_NUMBER, GFP_KERNEL);
-	for (i = 0; i < VT_1_NUMBER; i++) {
+	vt_1->sys_map = kmalloc(sizeof(struct sys_vect)*VT_1_NUMBER, GFP_KERNEL);
+	/*for (i = 0; i < VT_1_NUMBER; i++) {
 		vt_1->sys_map[i] = kmalloc(sizeof(struct sys_vect)*VT_COL_NO, GFP_KERNEL);
-	}
-	vt_1->sys_map[0]->sys_no = __NR_read;
-	vt_1->sys_map[0]->sys_func = read_func;
-	vt_1->sys_map[1]->sys_no = __NR_write;
-	vt_1->sys_map[1]->sys_func = NULL;
+	}*/
+	vt_1->sys_map[0].sys_no = __NR_read;
+	vt_1->sys_map[0].sys_func = read_func;
+	vt_1->sys_map[1].sys_no = __NR_write;
+	vt_1->sys_map[1].sys_func = NULL;
 	err = register_vt(vt_1);
 #if Debug
 	printk(KERN_INFO"err from register_vt = %d\n", err);
@@ -170,10 +170,10 @@ void test_function(void)
 		if (err < 0) {
 			printk("error opening %s:%d", "./var_arg.c", err);
 		}
-		read_func = vt_1->sys_map[0]->sys_func;
+		read_func = vt_1->sys_map[0].sys_func;
 		printk("value of cb using void is = %ld, sys_no is: %d, original_no is:%d\n",
 			//vt_1->call_back(__NR_read, 3, fd, tp, 10)
-			read_func(fd, tp, 5), vt_1->sys_map[0]->sys_no, __NR_write);
+			read_func(fd, tp, 5), vt_1->sys_map[0].sys_no, __NR_write);
 		tp[5] = '\0';
 		printk("string is %s\n", tp);
 		sys_close(fd);
