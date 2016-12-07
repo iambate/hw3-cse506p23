@@ -212,3 +212,4 @@ out:
 	write_unlock(&vt_rwlock);
 	return rc;
 }
+EXPORT_SYMBOL(change_vt);
