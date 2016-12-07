@@ -205,6 +205,7 @@ asmlinkage long clone2 (unsigned long clone_flags,unsigned long newsp,uintptr_t 
 	printk("Pid is:%d\n",pid);
 	pid_struct = find_get_pid(pid);
 	child = pid_task(pid_struct,PIDTYPE_PID);
+	child->vt=change_vt(child,vector_id);
 	//child=find_task(find_vpid(pid), PIDTYPE_PID)
 	return pid;
 }
