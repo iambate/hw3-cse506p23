@@ -185,7 +185,7 @@ void test_function(void)
 void register_all_sys_vectors(void)
 {
 	create_sys_vector_1();
-	test_function();
+	//test_function();
 }
 
 void deregister_all_sys_vectors(void)

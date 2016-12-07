@@ -36,32 +36,31 @@
 
 int main(int argc, const char *argv[])
 {
-	int rc;
-//	struct clone_arg arg;
-//       	void *dummy = (void *) argv[1];
-	void *stack;
-      
-	void *stack_start;
-	stack = (void*)malloc(65536);
-        stack_start=stack+6553;
-	unsigned long clone_flags=4096;
-	printf("Parent process ID : %d\n", getpid());
-	int *i=(int*)malloc(sizeof(int));
-	*i=10;
-	int *j=(int*)malloc(sizeof(int));
-	*j=10;
-      	 //rc = syscall(__NR_clone, clone_flags,stack_start,i,j,0)
-      	 //;
-    rc = syscall(__NR_clone2, SIGCHLD|4096,0,NULL,NULL,0,1);
-//	sleep(10000); 
-       if (rc == 0)
-               printf("syscall returned %d\n", rc);
-       else
-               printf("syscall returned %d (errno=%d)\n", rc, errno);
-free(i);
-free(j);
-free(stack);
-
-       exit(rc);
+	int rc, fd, i;
+	char *buf = (char *)malloc(4096);
+	unsigned long CLONE2_FLAG = 4096;
+	printf("Before clone2 call:\nParent process ID : %d\n", getpid());
+	printf("Calling read:\n");
+	fd = open("test.txt", O_RDONLY);
+	read(fd, buf, 4096);
+	printf("waiting...\n");
+	scanf("%d", &i);
+	//rc = syscall(__NR_clone, clone_flags,stack_start,i,j,0)
+	rc = syscall(__NR_clone2, SIGCHLD | CLONE2_FLAG, 0, NULL, NULL, 0, 1);
+	if (rc == 0) {
+		printf("syscall returned %d (errno=%d)\n", rc, errno);
+		printf("From child: %d\n", getpid());
+		printf("Calling read:\n");
+		printf("waiting...\n");
+		scanf("%d", &i);
+		read(fd, buf, 4096);
+		printf("waiting...\n");
+		scanf("%d", &i);
+		printf("From child: %d\n", getpid());
+		free(buf);
+	} else {
+		printf("syscall returned %d\n", rc);
+		wait(NULL);
+	}
+	exit(rc);
 }
-
