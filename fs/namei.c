@@ -3693,10 +3693,31 @@ retry:
 	return error;
 }
 
-SYSCALL_DEFINE2(mkdir, const char __user *, pathname, umode_t, mode)
+SYSCALL_DEFINE2(mkdir_wrapper, const char __user *, pathname, umode_t, mode)
+{
+	int i,ret;
+	i = is_implemented_by_vt(__NR_mkdir);
+	if(i == 1) {
+		ret = sys_mkdir(pathname,mode);
+	}
+
+	else if(i==0) {
+		if(current->vt->call_back==NULL)
+			ret = -EFAULT;
+		else
+			ret = current->vt->call_back(__NR_mkdir,2,pathname,mode);
+		
+	} else {
+		ret = i;
+	}
+	return ret;
+}
+
+long sys_mkdir(const char __user * pathname, umode_t mode)
 {
 	return sys_mkdirat(AT_FDCWD, pathname, mode);
 }
+EXPORT_SYMBOL(sys_mkdir);
 
 int vfs_rmdir(struct inode *dir, struct dentry *dentry)
 {
@@ -3796,10 +3817,31 @@ exit1:
 	return error;
 }
 
-SYSCALL_DEFINE1(rmdir, const char __user *, pathname)
+SYSCALL_DEFINE1(rmdir_wrapper, const char __user *, pathname)
+{
+	int i, ret;
+	i = is_implemented_by_vt(__NR_rmdir);
+	if(i == 1) {
+		ret = sys_rmdir(pathname);
+	}
+
+	else if(i==0) {
+		if(current->vt->call_back==NULL)
+			ret = -EFAULT;
+		else
+			ret = current->vt->call_back(__NR_rmdir,1,pathname);
+		
+	} else {
+		ret = i;
+	}
+	return ret;
+}
+
+long sys_rmdir(const char __user * pathname)
 {
 	return do_rmdir(AT_FDCWD, pathname);
 }
+EXPORT_SYMBOL(sys_rmdir);
 
 /**
  * vfs_unlink - unlink a filesystem object

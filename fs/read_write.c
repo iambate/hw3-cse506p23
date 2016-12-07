@@ -603,7 +603,7 @@ static inline void file_pos_write(struct file *file, loff_t pos)
 SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t, count)
 {
 	//struct fd f = fdget_pos(fd);
-	long (*read_func)(unsigned int fd, char __user * buf, size_t count);
+	//long (*read_func)(unsigned int fd, char __user * buf, size_t count);
 	ssize_t ret = -EBADF;
 	int i = INT_MAX;
 
