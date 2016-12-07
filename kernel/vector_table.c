@@ -178,3 +178,35 @@ struct vt_id_list *get_vt_id_list(void)
 	kfree(vt_ids);
 	return _vt_id_list;
 }
+
+/*
+ * Changes the vt of process from ts->vt to vt having to_vt_id
+ */
+int change_vt ( struct task_struct *ts, int to_vt_id)
+{
+	struct vector_table *tmp_vt, *from_vt = NULL, *to_vt = NULL;
+	int from_vt_id = 0, rc = 0;
+	write_lock(&vt_rwlock);
+	if (ts->vt != NULL) {
+		from_vt_id = ts->vt->id;
+	}
+	list_for_each_entry(tmp_vt, &(vt_head.vt_list), vt_list) {
+		if (tmp_vt->id == from_vt_id) {
+			from_vt = tmp_vt;
+		} else if (tmp_vt->id == to_vt_id) {
+			to_vt = tmp_vt;
+		}
+	}
+	if (to_vt == NULL) {
+		rc = -EINVAL;
+		goto out;
+	}
+	if (from_vt != NULL) {
+		atomic64_dec(&from_vt->rc);
+	}
+	atomic64_inc(&to_vt->rc);
+	ts->vt = to_vt;
+out:
+	write_unlock(&vt_rwlock);
+	return rc;
+}
