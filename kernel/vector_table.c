@@ -250,3 +250,15 @@ out:
 	return rc;
 }
 EXPORT_SYMBOL(change_vt);
+
+/*
+ * Reduce the vector_table
+ */
+void dec_rc_vt ( struct task_struct *ts )
+{
+	if (ts->vt != NULL) {
+		atomic64_inc(&(ts->vt->rc));
+		ts->vt = NULL;
+	}
+}
+EXPORT_SYMBOL(dec_rc_vt);
