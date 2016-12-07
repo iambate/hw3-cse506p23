@@ -602,6 +602,7 @@ static inline void file_pos_write(struct file *file, loff_t pos)
 SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t, count)
 {
 	//struct fd f = fdget_pos(fd);
+	long (*read_func)(unsigned int fd, char __user * buf, size_t count);
 	ssize_t ret = -EBADF;
 	int i;
 	i = is_implemented_by_vt(__NR_read);
@@ -609,12 +610,17 @@ SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t, coun
 		ret = sys_read(fd,buf,count);
 	}
 
-	else if(i==0) {
-		if(current->vt->call_back==NULL)
+	else if (i==0) {
+		/*if (current->vt->call_back == NULL)
 			ret = -EFAULT;
 		else
-			ret=current->vt->call_back(__NR_read,3,fd,buf,count);
-		
+			ret=current->vt->call_back(__NR_read,3,fd,buf,count);*/
+		if (current->vt->func == NULL)
+			ret = -EFAULT;
+		else {
+			read_func = current->vt->func;
+			ret = read_func(fd, buf, count);
+		}
 	} else {
 		ret = i;
 	}

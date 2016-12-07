@@ -7,15 +7,18 @@
 #define GET_FLAG 10
 #define SET_FLAG 0
 
+struct sys_vect {
+	int sys_no;
+	void *sys_func;
+};
 
 struct vector_table {
 	int id;
 	atomic64_t rc;
 	struct list_head vt_list;
 	int sys_map_size;
-	int **sys_map;	
+	struct sys_vect **sys_map;
 	long (* call_back)(int sys_call_no, int param_nos, ...);
-
 };
 
 struct var_args {

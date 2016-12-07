@@ -1,5 +1,6 @@
 #include <asm/page.h>
 #include <asm/uaccess.h>
+#include <linux/uaccess.h>
 #include <linux/fs.h>
 #include <linux/gfp.h>
 #include <linux/linkage.h>
@@ -13,7 +14,6 @@
 #include <linux/module.h>
 #include <linux/syscalls.h>
 #include <linux/fcntl.h>
-#include <asm/uaccess.h>
 
 #define VT_1_NUMBER 2
 #define VT_COL_NO 2
@@ -39,7 +39,7 @@ int file_open(const char *path, int flags, int rights, struct file **fileptr)
 	return 0;
 }
 
-int read_vt_1(unsigned int fd, char __user *buf, size_t count)
+long read_vt_1(unsigned int fd, char __user *buf, size_t count)
 {
 	int ret = 0;
 
@@ -50,6 +50,7 @@ int read_vt_1(unsigned int fd, char __user *buf, size_t count)
 	ret = sys_read(fd, buf, count);
 #if Debug
 	printk(KERN_INFO "ret from read_sys is %d\n", ret);
+	printk(KERN_INFO "inside read_vt_1 buf is :%s\n",buf);
 #endif
 	return ret;
 }
@@ -112,18 +113,28 @@ void create_sys_vector_1(void)
 {
 	int i;
 	int err = 1;
+	long (*read_func)(unsigned int fd, char __user *buf, size_t count);
 
+	read_func =  read_vt_1;
 	vt_1 = kmalloc(sizeof(struct vector_table), GFP_KERNEL);
 	vt_1->call_back = &callback_sys_vector_1;
 	vt_1->sys_map_size = VT_1_NUMBER;
-	vt_1->sys_map = kmalloc(sizeof(int *)*VT_1_NUMBER, GFP_KERNEL);
+	/*vt_1->sys_map = kmalloc(sizeof(int *)*VT_1_NUMBER, GFP_KERNEL);
 	for (i = 0; i < VT_1_NUMBER; i++) {
 		vt_1->sys_map[i] = kmalloc(sizeof(int)*VT_COL_NO, GFP_KERNEL);
 	}
 	vt_1->sys_map[0][0] = __NR_read;
 	vt_1->sys_map[0][1] = 1;
 	vt_1->sys_map[1][0] = __NR_write;
-	vt_1->sys_map[1][1] = -1;
+	vt_1->sys_map[1][1] = -1;*/
+	vt_1->sys_map = kmalloc(sizeof(struct sys_vect *)*VT_1_NUMBER, GFP_KERNEL);
+	for (i = 0; i < VT_1_NUMBER; i++) {
+		vt_1->sys_map[i] = kmalloc(sizeof(struct sys_vect)*VT_COL_NO, GFP_KERNEL);
+	}
+	vt_1->sys_map[0]->sys_no = __NR_read;
+	vt_1->sys_map[0]->sys_func = read_func;
+	vt_1->sys_map[1]->sys_no = __NR_write;
+	vt_1->sys_map[1]->sys_func = NULL;
 	err = register_vt(vt_1);
 #if Debug
 	printk(KERN_INFO"err from register_vt = %d\n", err);
@@ -148,21 +159,25 @@ void test_function(void)
 	unsigned int fd = 999;
 	int err = 0;
 	mm_segment_t oldfs;
+	long (*read_func)(unsigned int fd, char __user *buf, size_t count); 
 
 	oldfs = get_fs();
 	set_fs(get_ds());
 	fd = sys_open("test.txt", O_RDONLY, 0);
 	printk("fd = %u\n", fd);
 	if (fd >= 0) {
-		tp = kmalloc(sizeof(char)*11, GFP_KERNEL);
+		tp = kmalloc(sizeof(char)*16, GFP_KERNEL);
 		if (err < 0) {
 			printk("error opening %s:%d", "./var_arg.c", err);
 		}
-		printk("value of cb is = %ld\n",
-			vt_1->call_back(__NR_read, 3, fd, tp, 10));
-		tp[10] = '\0';
+		read_func = vt_1->sys_map[0]->sys_func;
+		printk("value of cb using void is = %ld, sys_no is: %d, original_no is:%d\n",
+			//vt_1->call_back(__NR_read, 3, fd, tp, 10)
+			read_func(fd, tp, 5), vt_1->sys_map[0]->sys_no, __NR_write);
+		tp[5] = '\0';
 		printk("string is %s\n", tp);
 		sys_close(fd);
+		kfree(tp);
 	}
 	set_fs(oldfs);
 }
