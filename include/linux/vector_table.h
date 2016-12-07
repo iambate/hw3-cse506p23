@@ -17,8 +17,7 @@ struct vector_table {
 	atomic64_t rc;
 	struct list_head vt_list;
 	int sys_map_size;
-	struct sys_vect *sys_map;
-	long (* call_back)(int sys_call_no, int param_nos, ...);
+	struct sys_vect *sys_map;	
 };
 
 struct var_args {
