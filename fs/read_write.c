@@ -603,7 +603,7 @@ static inline void file_pos_write(struct file *file, loff_t pos)
 SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t, count)
 {
 	//struct fd f = fdget_pos(fd);
-	//long (*read_func)(unsigned int fd, char __user * buf, size_t count);
+	long (*read_func)(unsigned int fd, char __user * buf, size_t count);
 	ssize_t ret = -EBADF;
 	int i = INT_MAX;
 
@@ -643,19 +643,21 @@ EXPORT_SYMBOL(sys_read);
 SYSCALL_DEFINE3(write_wrapper, unsigned int, fd, const char __user *, buf,
 		size_t, count)
 {
-	//struct fd f = fdget_pos(fd);
+	long (*write_func)(unsigned int fd, const char __user * buf, size_t count);
 	ssize_t ret = -EBADF;
-	int i;
+	int i = INT_MAX;
+
 	i = is_implemented_by_vt(__NR_write);
 	if(i == INT_MAX) {
 		ret = sys_write(fd,buf,count);
 	}
-	else if (i >=0) {
-		if(current->vt->call_back==NULL)
+	else if (i >= 0 && i != INT_MAX) {
+		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
-		else
-			ret=current->vt->call_back(__NR_write,3,fd,buf,count);
-		
+		else {
+			write_func = current->vt->sys_map[i].sys_func;
+			ret = write_func(fd, buf, count);
+		}
 	} else {
 		ret = i;
 	}

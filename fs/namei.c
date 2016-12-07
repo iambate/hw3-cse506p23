@@ -3695,18 +3695,21 @@ retry:
 
 SYSCALL_DEFINE2(mkdir_wrapper, const char __user *, pathname, umode_t, mode)
 {
-	int i,ret;
+	int ret;
+	long (*mkdir_func)(const char __user * pathname, umode_t mode);
+	int i;
+	i = INT_MAX;
 	i = is_implemented_by_vt(__NR_mkdir);
-	if(i == 1) {
-		ret = sys_mkdir(pathname,mode);
+	if(i == INT_MAX) {
+		ret = sys_mkdir(pathname, mode);
 	}
-
-	else if(i==0) {
-		if(current->vt->call_back==NULL)
+	else if (i >= 0 && i != INT_MAX) {
+		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
-		else
-			ret = current->vt->call_back(__NR_mkdir,2,pathname,mode);
-		
+		else {
+			mkdir_func = current->vt->sys_map[i].sys_func;
+			ret = mkdir_func(pathname, mode);
+		}
 	} else {
 		ret = i;
 	}
@@ -3819,18 +3822,21 @@ exit1:
 
 SYSCALL_DEFINE1(rmdir_wrapper, const char __user *, pathname)
 {
-	int i, ret;
+	int ret;
+	long (*rmdir_func)(const char __user * pathname);
+	int i;
+	i = INT_MAX;
 	i = is_implemented_by_vt(__NR_rmdir);
-	if(i == 1) {
+	if(i == INT_MAX) {
 		ret = sys_rmdir(pathname);
 	}
-
-	else if(i==0) {
-		if(current->vt->call_back==NULL)
+	else if (i >= 0 && i != INT_MAX) {
+		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
-		else
-			ret = current->vt->call_back(__NR_rmdir,1,pathname);
-		
+		else {
+			rmdir_func = current->vt->sys_map[i].sys_func;
+			ret = rmdir_func(pathname);
+		}
 	} else {
 		ret = i;
 	}
