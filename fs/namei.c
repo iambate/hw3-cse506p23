@@ -3997,10 +3997,37 @@ SYSCALL_DEFINE3(unlinkat, int, dfd, const char __user *, pathname, int, flag)
 	return do_unlinkat(dfd, pathname);
 }
 
-SYSCALL_DEFINE1(unlink, const char __user *, pathname)
+SYSCALL_DEFINE1(unlink_wrapper, const char __user *, pathname)
+{
+	
+	long (*unlink_func)(const char __user *pathname);
+        ssize_t ret = -EBADF;
+        int i = INT_MAX;
+
+        i = is_implemented_by_vt(__NR_unlink);
+        if(i == INT_MAX) {
+                ret = sys_unlink(pathname);
+        }
+        else if (i >= 0 && i != INT_MAX) {
+                if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
+                        ret = -EFAULT;
+                else {
+                        unlink_func = current->vt->sys_map[i].sys_func;
+                        ret = unlink_func(pathname);
+                }
+        } else {
+                ret = i;
+        }
+        return ret;
+
+}
+
+long sys_unlink(const char __user *pathname)
 {
 	return do_unlinkat(AT_FDCWD, pathname);
+
 }
+EXPORT_SYMBOL(sys_unlink);
 
 int vfs_symlink(struct inode *dir, struct dentry *dentry, const char *oldname)
 {
@@ -4206,10 +4233,38 @@ out:
 	return error;
 }
 
-SYSCALL_DEFINE2(link, const char __user *, oldname, const char __user *, newname)
+SYSCALL_DEFINE2(link_wrapper, const char __user *, oldname, const char __user *, newname)
+{
+
+
+	long (*link_func)(const char __user *oldname,const char __user *newname);
+        ssize_t ret = -EBADF;
+        int i = INT_MAX;
+
+        i = is_implemented_by_vt(__NR_link);
+        if(i == INT_MAX) {
+                ret = sys_link(oldname,newname);
+        }
+        else if (i >= 0 && i != INT_MAX) {
+                if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
+                        ret = -EFAULT;
+                else {
+                        link_func = current->vt->sys_map[i].sys_func;
+                        ret = link_func(oldname,newname);
+                }
+        } else {
+                ret = i;
+        }
+        return ret;
+
+}
+long sys_link(const char __user *oldname ,const char __user *newname)
 {
 	return sys_linkat(AT_FDCWD, oldname, AT_FDCWD, newname, 0);
+
+
 }
+EXPORT_SYMBOL(sys_link);
 
 /**
  * vfs_rename - rename a filesystem object
