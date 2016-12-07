@@ -9,6 +9,7 @@
 #include <linux/export.h>
 #include <linux/vmalloc.h>
 #include <linux/limits.h>
+#include <linux/mm.h>
 
 DEFINE_RWLOCK(vt_rwlock);
 static struct vector_table vt_head = {
@@ -155,6 +156,7 @@ struct vector_table *get_vt (int vt_id)
 }
 EXPORT_SYMBOL(get_vt);
 
+
 /*
  * return a user array for ioctl of maximum 1024 length
  */
@@ -163,9 +165,20 @@ struct vt_id_list *get_vt_id_list(void)
 	/*
 	 * vt_ids can be max 1024
 	 */
-	int count = 0, *vt_ids = kmalloc(sizeof(int)*1024, GFP_KERNEL);
-	struct vt_id_list *_vt_id_list = kmalloc(sizeof(struct vt_id_list), GFP_KERNEL);
+	int count = 0, retval = 0, *vt_ids = NULL;
+	struct vt_id_list *_vt_id_list = NULL;
 	struct vector_table *tmp_vt;
+	vt_ids = kmalloc(sizeof(int)*1024, GFP_KERNEL);
+	if (vt_ids == NULL) {
+		retval = -ENOMEM;
+		goto err;
+	}
+	_vt_id_list = kmalloc(sizeof(struct vt_id_list), GFP_KERNEL);
+	if (_vt_id_list == NULL) {
+		retval = -ENOMEM;
+		goto err;
+	}
+
 	read_lock(&vt_rwlock);
 	list_for_each_entry(tmp_vt, &(vt_head.vt_list), vt_list) {
 		vt_ids[count] = tmp_vt->id;
@@ -174,12 +187,24 @@ struct vt_id_list *get_vt_id_list(void)
 			break;
 	}
 	read_unlock(&vt_rwlock);
-	_vt_id_list->vt_ids = vmalloc_user(count * sizeof(int));
-	copy_to_user(_vt_id_list->vt_ids, vt_ids, count * sizeof(int));
+
+	if (count == 0) {
+		kfree(vt_ids);
+		goto out;
+	}
+	_vt_id_list->vt_ids = vt_ids;
+
+out:
 	_vt_id_list->vt_ids_count = count;
-	kfree(vt_ids);
 	return _vt_id_list;
+err:
+	if (vt_ids != NULL) {
+		kfree(vt_ids);
+	}
+	return ERR_PTR(retval);
 }
+EXPORT_SYMBOL(get_vt_id_list);
+
 
 /*
  * Changes the vt of process from ts->vt to vt having to_vt_id

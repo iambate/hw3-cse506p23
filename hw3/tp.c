@@ -6,7 +6,9 @@
 #include <linux/moduleloader.h>
 #include <linux/namei.h>
 #include <linux/slab.h>
+#include <linux/vmalloc.h>
 #include <linux/vector_table.h>
+#include <linux/mm.h>
 DEFINE_RWLOCK(vt_rwlock);
 static struct vector_table vt_head = {
         .id = 0,
@@ -44,7 +46,23 @@ out:
 struct vector_table *vt[7];
 static int __init init_sys_mergesort(void)
 {
-	int i;
+	int i, count = 10, retval;
+	void *vt_ids;
+	struct vm_area_struct *vma;
+        vt_ids = vmalloc_user(count * sizeof(int));
+        if (vt_ids == NULL) {
+                retval = -ENOMEM;
+                goto err;
+        }
+
+        down_write(&current->mm->mmap_sem);
+        vma = find_vma(current->mm, (unsigned long)vt_ids);
+        if (vma)
+                retval = remap_vmalloc_range(vma, vt_ids, 0);
+        else
+                printk(KERN_DEBUG, "get_vt_ids: vma is NULL");
+        up_write(&current->mm->mmap_sem);
+	goto err;
 	printk("Is implemented: %d\n", is_implemented_by_vt(__NR_read));
 	for(i = 0;i < 7; i++){
 		vt[i] = kmalloc(sizeof(struct vector_table), GFP_KERNEL);
@@ -60,6 +78,7 @@ static int __init init_sys_mergesort(void)
 		//rc = register_vt(vt[i]);
 		//printk("register_vt returned: %d\n", rc);
 	}
+err:
 	return 0;
 }
 static void  __exit exit_sys_mergesort(void)
