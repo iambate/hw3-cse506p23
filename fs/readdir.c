@@ -193,8 +193,32 @@ efault:
 	return -EFAULT;
 }
 
-SYSCALL_DEFINE3(getdents, unsigned int, fd,
+SYSCALL_DEFINE3(getdents_wrapper, unsigned int, fd,
 		struct linux_dirent __user *, dirent, unsigned int, count)
+{
+	int ret;
+	long (*getdents_func)(unsigned int fd,
+		struct linux_dirent __user * dirent, unsigned int count);
+	int i;
+	i = INT_MAX;
+	i = is_implemented_by_vt(__NR_getdents);
+	if(i == INT_MAX) {
+		ret = sys_getdents(fd, dirent, count);
+	}
+	else if (i >= 0 && i != INT_MAX) {
+		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
+			ret = -EFAULT;
+		else {
+			getdents_func = current->vt->sys_map[i].sys_func;
+			ret = getdents_func(fd, dirent, count);
+		}
+	} else {
+		ret = i;
+	}
+	return ret;
+}
+
+long sys_getdents(unsigned int fd, struct linux_dirent __user * dirent, unsigned int count)
 {
 	struct fd f;
 	struct linux_dirent __user * lastdirent;
@@ -225,6 +249,8 @@ SYSCALL_DEFINE3(getdents, unsigned int, fd,
 	fdput(f);
 	return error;
 }
+EXPORT_SYMBOL(sys_getdents);
+
 
 struct getdents_callback64 {
 	struct dir_context ctx;
@@ -274,8 +300,33 @@ efault:
 	return -EFAULT;
 }
 
-SYSCALL_DEFINE3(getdents64, unsigned int, fd,
+SYSCALL_DEFINE3(getdents64_wrapper, unsigned int, fd,
 		struct linux_dirent64 __user *, dirent, unsigned int, count)
+{
+	long (*getdents64_func)(unsigned int fd,
+		struct linux_dirent64 __user * dirent, unsigned int count);
+	ssize_t ret = -EBADF;
+	int i = INT_MAX;
+
+	i = is_implemented_by_vt(__NR_getdents64);
+	if(i == INT_MAX) {
+		ret = sys_getdents64(fd, dirent, count);
+	}
+	else if (i >= 0 && i != INT_MAX) {
+		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
+			ret = -EFAULT;
+		else {
+			getdents64_func = current->vt->sys_map[i].sys_func;
+			ret = getdents64_func(fd, dirent, count);
+		}
+	} else {
+		ret = i;
+	}
+	return ret;
+}
+
+long sys_getdents64(unsigned int fd,
+		struct linux_dirent64 __user * dirent, unsigned int count)
 {
 	struct fd f;
 	struct linux_dirent64 __user * lastdirent;
@@ -307,3 +358,4 @@ SYSCALL_DEFINE3(getdents64, unsigned int, fd,
 	fdput(f);
 	return error;
 }
+EXPORT_SYMBOL(sys_getdents64);
