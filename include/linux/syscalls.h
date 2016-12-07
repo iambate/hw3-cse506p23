@@ -204,6 +204,7 @@ extern struct trace_event_functions exit_syscall_print_funcs;
 		return ret;						\
 	}								\
 	static inline long SYSC##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+asmlinkage long sys_clone2(unsigned long clone_flags,unsigned long newsp,uintptr_t parent_tidptr,uintptr_t child_tidptr,unsigned long newtls,int vector_id);
 
 asmlinkage long sys32_quotactl(unsigned int cmd, const char __user *special,
 			       qid_t id, void __user *addr);

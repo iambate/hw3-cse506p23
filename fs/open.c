@@ -1197,3 +1197,15 @@ int nonseekable_open(struct inode *inode, struct file *filp)
 }
 
 EXPORT_SYMBOL(nonseekable_open);
+
+asmlinkage long (*sysptr)(unsigned long clone_flags,unsigned long newsp,uintptr_t parent_tidptr,uintptr_t child_tidptr,unsigned long newtls,int vector_id) = NULL;
+
+asmlinkage long sys_clone2(unsigned long clone_flags,unsigned long newsp,uintptr_t parent_tidptr,uintptr_t child_tidptr,unsigned long newtls,int vector_id)
+{
+       if (sysptr != NULL)
+               return (*sysptr)( clone_flags, newsp, parent_tidptr, child_tidptr, newtls, vector_id);
+       else
+               return -ENOTSUPP;
+}
+EXPORT_SYMBOL(sysptr);
+

@@ -10,7 +10,7 @@
  * Fork is rather simple, once you get the hang of it, but the memory
  * management can be a bitch. See 'mm/memory.c': 'copy_page_range()'
  */
-
+#include<linux/sched.h>
 #include <linux/slab.h>
 #include <linux/init.h>
 #include <linux/unistd.h>
@@ -76,7 +76,7 @@
 #include <linux/compiler.h>
 #include <linux/sysctl.h>
 #include <linux/kcov.h>
-
+#include<linux/vector_table.h>
 #include <asm/pgtable.h>
 #include <asm/pgalloc.h>
 #include <asm/uaccess.h>
@@ -1709,7 +1709,7 @@ long _do_fork(unsigned long clone_flags,
 	struct task_struct *p;
 	int trace = 0;
 	long nr;
-	//printk("Clone flag is: %lu and stack start is: %lu",clone_flags,stack_start);
+
 	/*
 	 * Determine whether and which event to report to ptracer.  When
 	 * called from kernel_thread or CLONE_UNTRACED is explicitly
@@ -1769,6 +1769,7 @@ long _do_fork(unsigned long clone_flags,
 	}
 	return nr;
 }
+EXPORT_SYMBOL(_do_fork);
 
 #ifndef CONFIG_HAVE_COPY_THREAD_TLS
 /* For compatibility with architectures that call do_fork directly rather than
