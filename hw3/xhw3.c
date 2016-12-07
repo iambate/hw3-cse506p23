@@ -29,7 +29,7 @@
 #include <fcntl.h>		/* open */
 #include <unistd.h>		/* exit */
 #include <sys/ioctl.h>		/* ioctl */
-
+//#include<linux/vector_table.h>
 #ifndef __NR_clone2
 #error clone2 system call not defined
 #endif
@@ -40,6 +40,8 @@ int main(int argc, const char *argv[])
 	char *buf = (char *)malloc(4096);
 	unsigned long CLONE2_FLAG = 4096;
 	printf("Before clone2 call:\nParent process ID : %d\n", getpid());
+	//intf("The vector_id is :%d",get_vt_id())
+	int id;
 	printf("Calling read:\n");
 	fd = open("test.txt", O_RDONLY);
 	read(fd, buf, 4096);
@@ -50,6 +52,8 @@ int main(int argc, const char *argv[])
 	if (rc == 0) {
 		printf("syscall returned %d (errno=%d)\n", rc, errno);
 		printf("From child: %d\n", getpid());
+		id=syscall(330);
+		printf("waiting id in chidl is:%d\n",id);
 		printf("Calling read:\n");
 		printf("waiting...\nEnter any number to continue...\n");
 		scanf("%d", &i);
@@ -59,10 +63,15 @@ int main(int argc, const char *argv[])
 		printf("waiting...\n");
 		scanf("%d", &i);
 		printf("From child: %d\n", getpid());
+		printf("The vector_id is :%d",id);
+
 		free(buf);
 	} else {
+		id=syscall(330);
+		printf("\nwaiting id in parent is:%d",id);
 		printf("syscall returned %d\n", rc);
 		wait(NULL);
+		free(buf);
 	}
 	exit(rc);
 }

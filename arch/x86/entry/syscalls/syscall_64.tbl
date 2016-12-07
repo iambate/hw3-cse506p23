@@ -336,7 +336,7 @@
 327	64	preadv2			sys_preadv2
 328	64	pwritev2		sys_pwritev2
 329	64	clone2			sys_clone2
-
+330	64	getvtid			sys_getvtbyid
 #
 # x32-specific system call numbers start at 512 to avoid cache impact
 # for native 64-bit operation.

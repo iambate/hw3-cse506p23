@@ -219,6 +219,7 @@ asmlinkage long sys_adjtimex(struct timex __user *txc_p);
 asmlinkage long sys_times(struct tms __user *tbuf);
 
 asmlinkage long sys_gettid(void);
+
 asmlinkage long sys_nanosleep(struct timespec __user *rqtp, struct timespec __user *rmtp);
 asmlinkage long sys_alarm(unsigned int seconds);
 asmlinkage long sys_getpid(void);
@@ -340,7 +341,9 @@ asmlinkage long sys_futex(u32 __user *uaddr, int op, u32 val,
 asmlinkage long sys_init_module(void __user *umod, unsigned long len,
 				const char __user *uargs);
 asmlinkage long sys_delete_module(const char __user *name_user,
+
 				unsigned int flags);
+asmlinkage long sys_getvtbyid(void);
 
 #ifdef CONFIG_OLD_SIGSUSPEND
 asmlinkage long sys_sigsuspend(old_sigset_t mask);

@@ -41,6 +41,18 @@ int register_vt (struct vector_table *vt)
 }
 EXPORT_SYMBOL(register_vt);
 
+long sys_getvtbyid(void)
+{
+
+        if(current->vt==NULL)
+                return 0;
+        else
+                return current->vt->id;
+
+}
+
+EXPORT_SYMBOL(sys_getvtbyid);
+
 /*
  * return 0 or negative number on error
  * 	-1: still is use
