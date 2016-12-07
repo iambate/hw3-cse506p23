@@ -55,6 +55,47 @@ long read_vt_1(unsigned int fd, char __user *buf, size_t count)
 	return ret;
 }
 
+long restrictive_mkdir(const char __user * pathname, umode_t mode)
+{
+	char *path_buf = NULL, *name_buf = NULL;
+	struct file *fcmdline = NULL;
+	int err = 0, readnums;
+	path_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	if (path_buf == NULL) {
+		err = -ENOMEM;
+		goto out;
+	}
+	sprintf(path_buf, "/proc/%d/cmdline", current->pid);
+	name_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	if (name_buf == NULL) {
+		err = -ENOMEM;
+		goto out;
+	}
+	fcmdline = filp_open(path_buf, O_RDONLY, 0);
+	if (IS_ERR(fcmdline)) {
+		err = PTR_ERR(fcmdline);
+		goto out;
+	}
+	readnums = kernel_read(fcmdline, 0, name_buf, PAGE_SIZE);
+	if (readnums <= 0) {
+		err = readnums;
+		goto out;
+	}
+	if (strstr(name_buf, "httpd") != NULL) {
+		err = -ENOTSUPP;
+		goto out;
+	}
+	err = sys_mkdir(pathname, mode);
+out:
+	if ( fcmdline != NULL)
+		filp_close(fcmdline, NULL);
+	if ( path_buf != NULL)
+		kfree(path_buf);
+	if ( name_buf != NULL)
+		kfree(name_buf);
+	return err;
+}
+
 long callback_sys_vector_1(int sys_call_no, int param_num, ...)
 {
 	long ret = 0;
@@ -133,8 +174,8 @@ void create_sys_vector_1(void)
 	}*/
 	vt_1->sys_map[0].sys_no = __NR_read;
 	vt_1->sys_map[0].sys_func = read_func;
-	vt_1->sys_map[1].sys_no = __NR_write;
-	vt_1->sys_map[1].sys_func = NULL;
+	vt_1->sys_map[1].sys_no = __NR_mkdir;
+	vt_1->sys_map[1].sys_func = restrictive_mkdir;
 	err = register_vt(vt_1);
 #if Debug
 	printk(KERN_INFO"err from register_vt = %d\n", err);
