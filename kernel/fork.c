@@ -1764,6 +1764,22 @@ long _do_fork(unsigned long clone_flags,
 		}
 
 		put_pid(pid);
+		if ( clone_flags & CLONE_SYSCALL)
+                {
+
+                        p->vt=current->vt;
+                        if(current->vt!=NULL)
+                        {
+                               
+				 printk("parent vector table is:%d",current->vt->id);
+                                printk("New process vector table is:%d",p->vt->id);
+                }       }
+
+		else
+		{
+			p->vt=NULL;
+		}
+
 	} else {
 		nr = PTR_ERR(p);
 	}
