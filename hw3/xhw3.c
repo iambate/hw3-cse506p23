@@ -64,7 +64,6 @@ int main(int argc, const char *argv[])
 		scanf("%d", &i);
 		printf("From child: %d\n", getpid());
 		printf("The vector_id is :%d",id);
-
 		free(buf);
 	} else {
 		id=syscall(330);
