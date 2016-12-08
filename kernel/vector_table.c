@@ -246,7 +246,7 @@ int change_vt ( struct task_struct *ts, int to_vt_id)
 			to_vt = tmp_vt;
 		}
 	}
-	if (to_vt == NULL) {
+	if (to_vt_id != 0 && to_vt == NULL) {
 		rc = -EINVAL;
 		goto out;
 	}
@@ -254,7 +254,7 @@ int change_vt ( struct task_struct *ts, int to_vt_id)
 		atomic64_dec(&from_vt->rc);
 		if (from_vt->module_ref ) {
 			if (atomic64_read(&from_vt->rc) == 0) {
-				printk(KERN_INFO "decreasing module ref of %p\n", from_vt->module_ref);
+				printk(KERN_DEBUG "decreasing module ref of %p\n", from_vt->module_ref);
 				module_put(from_vt->module_ref);
 			}
 		}
@@ -263,10 +263,14 @@ int change_vt ( struct task_struct *ts, int to_vt_id)
 			goto out;
 		}
 	}
+	if (to_vt == NULL) {
+		ts->vt = NULL;
+		goto out;
+	}
 	if (to_vt->module_ref ) {
 		if (atomic64_read(&to_vt->rc) == 0) {
 			try_module_get(to_vt->module_ref);
-			printk(KERN_INFO "increased module ref of %p\n", to_vt->module_ref);
+			printk(KERN_DEBUG "increased module ref of %p\n", to_vt->module_ref);
 		}
 	}
 	else {
