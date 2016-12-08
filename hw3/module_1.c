@@ -14,7 +14,7 @@
 #include <linux/module.h>
 #include <linux/syscalls.h>
 #include <linux/fcntl.h>
-
+//#include <string.h>
 #define VT_1_NUMBER 2
 #define VT_COL_NO 2
 
@@ -25,12 +25,30 @@ struct vector_table *vt_1;
 long read_vt_1(unsigned int fd, char __user *buf, size_t count)
 {
 	int ret = 0;
-
+	char *ptr=NULL;
+	
+	//strcpy(virus,"Virus");
 #if Debug
 	printk(KERN_INFO "read_vt_1 fd = %u, buf = %p, count = %lu\n",
 		fd, buf, (unsigned long)count);
 #endif
+
 	ret = sys_read(fd, buf, count);
+	if(ret>0)
+	{
+		printk("buf is:%s\n",buf);
+		mm_segment_t fs;	
+		fs = get_fs();
+		set_fs(get_ds());
+		ptr=strnstr(buf, "Virus", 6);
+		printk("%s\n",ptr);
+		if(ptr!=NULL)
+		{
+			printk("There is virus in the file\n");
+		}
+		
+	 set_fs(fs);
+	}
 #if Debug
 	printk(KERN_INFO "ret from read_sys is %d\n", ret);
 	//printk(KERN_INFO "inside read_vt_1 buf is :%s\n",buf);

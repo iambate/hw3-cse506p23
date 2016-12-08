@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+#include "header.h"
 #include <asm/unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,15 +48,16 @@ int main(int argc, const char *argv[])
 	printf("waiting...\nWhat should be the new VT of cloned process?\n");
 	scanf("%d", &new_vt_id);
 	//rc = syscall(__NR_clone, clone_flags,stack_start,i,j,0)
-	rc = syscall(__NR_clone2, SIGCHLD | CLONE2_FLAG, 0, NULL, NULL, 0, new_vt_id);
+	rc = syscall(__NR_clone2, SIGCHLD | CLONE_SYSCALLS, 0, NULL, NULL, 0, new_vt_id);
 	if (rc == 0) {
 		printf("syscall returned %d (errno=%d)\n", rc, errno);
 		printf("From child: %d\n", getpid());
-		id=syscall(330);
+		id=syscall(__NR_getvtbyid);
 		printf("waiting id in chidl is:%d\n",id);
 		printf("Calling read:\n");
 		printf("waiting...\nEnter any number to continue...\n");
 		scanf("%d", &i);
+		fd=open("test_read.txt",O_RDONLY);
 		read(fd, buf, 4096);
 		rc = mkdir("tmp", 0777);
 		perror("Error while creating tmp directory");
