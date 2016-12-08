@@ -6,6 +6,7 @@
 
 #define GET_FLAG 10
 #define SET_FLAG 0
+#define GET_VT 11
 
 struct sys_vect {
 	int sys_no;

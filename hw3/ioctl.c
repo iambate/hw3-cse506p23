@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
@@ -11,6 +12,23 @@
 #include <string.h>
 #include "ioctl_new.h"
 #include <sys/ioctl.h>
+
+
+int isNumber(char number[])
+{
+    int i = 0;
+
+    //checking for negative numbers
+    if (number[0] == '-')
+	i = 1;
+    for (; number[i] != 0; i++)
+    {
+	//if (number[i] > '9' || number[i] < '0')
+	if (!isdigit(number[i]))
+	    return -1;
+    }
+    return 0;
+}
 
 int pass_to_kernel(int argc, char **argv){
 
@@ -26,6 +44,7 @@ int pass_to_kernel(int argc, char **argv){
 	//args->vector_table_id = NULL;
 
 	filepath = "/dev/zero";
+
 
 	if ((fdesc = open(filepath, O_RDONLY)) < 0) {
 			perror("Error in creating a file");
@@ -49,18 +68,51 @@ int pass_to_kernel(int argc, char **argv){
 	}
 	
 	else if(argc == 3) {
-		args = (struct var_args*)malloc(sizeof(struct var_args));
-		args->process_id = atoi(argv[1]);
-		args->vector_table_id = atoi(argv[2]);
-		printf("Process ID: %d\n", args->process_id);
-		printf("Vector Table: %d\n", args->vector_table_id);
-		retVal = ioctl(fdesc,SET_FLAG,(unsigned long)args);
-		//printf("arg address=%lu\n",(unsigned long)args);
-		perror("return");
-		printf("Invalid Vector Table: Error: %d\n",retVal);
+		
+			/*			
+			if ( (strcmp(argv[1], "get") == 0) && (isNumber(argv[2]) == 0) ) { 
+				args = (struct var_args*)malloc(sizeof(struct var_args));
+				args->process_id = atoi(argv[1]);
+				args->vector_table_id = NULL;
+
+				retVal = ioctl(fdesc,GET_VT,(unsigned long)args);
+				//printf("arg address=%lu\n",(unsigned long)args);
+
+				perror("Return");
+				if (retVal != 0)
+					printf("Invalid Process ID: Error: %d\n",retVal);
+				free (args);
+			}
+
+			else if ( (strcmp(argv[1], "get") == 0) && (isNumber(argv[2]) != 0) ) { 
+				printf("Invalid Process ID\n");
+				retVal = EINVAL;			
+			}
+			*/
+
+			if ( (isNumber(argv[1]) == 0) && (isNumber(argv[2]) == 0) ) {
+	
+				args = (struct var_args*)malloc(sizeof(struct var_args));
+				args->process_id = atoi(argv[1]);
+				args->vector_table_id = atoi(argv[2]);
+				//printf("Process ID: %d\n", args->process_id);
+				//printf("Vector Table: %d\n", args->vector_table_id);
+				retVal = ioctl(fdesc,SET_FLAG,(unsigned long)args);
+				//printf("arg address=%lu\n",(unsigned long)args);
+				perror("Return");
+				if (retVal != 0)
+					printf("Invalid Process ID/Vector Table ID: Error: %d\n",retVal);
+				free (args);
+			}
+
+			else {
+				printf("Invalid Process ID/Vector Table ID\n");
+				retVal = EINVAL;
+			}
+
 	}
 
-	return 0;
+	return retVal;
 }
 
 

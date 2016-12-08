@@ -1,5 +1,6 @@
 #define GET_FLAG 10
 #define SET_FLAG 0
+#define GET_VT 11
 
 struct var_args {
 	pid_t process_id;

@@ -613,7 +613,7 @@ out:
 int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 	     unsigned long arg)
 {
-	int error;
+	int error, *orig_vt_ids, ret;
 	int __user *argp;
 	struct inode *inode;
 	struct var_args *k_args, *tp_args;
@@ -621,6 +621,7 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 	struct pid *pid_struct;
 	struct task_struct *tsk;	
 	error = 0;
+	ret = 0;
 	argp = (int __user *)arg;
 	inode = file_inode(filp);
 	
@@ -633,27 +634,39 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		printk("tp_args->pid=%d\n", tp_args->process_id);
 		
 		k_args = kmalloc(sizeof(struct var_args),GFP_KERNEL);
-		if(k_args == NULL)
-                        printk("Memory Allocation failed!!\n");		
-		error = copy_from_user(k_args, (void *)arg, sizeof(struct var_args));
-		if (error)
-			kfree(k_args);
+		if(k_args == NULL) {
+                        printk("Memory Allocation failed!!\n");
+			ret = -ENOMEM;
+			goto ret1;
+		}		
+		ret = copy_from_user(k_args, (void *)arg, sizeof(struct var_args));
+		if (ret)
+			goto err1;
 		printk("k_args->vector_table=%d\n", k_args->vector_table_id);
 		printk("k_args->pid=%d\n", k_args->process_id);
 		printk("SET_FLAG\n");
 
 		// Fetching PID of a process
 		pid_struct = find_get_pid(k_args->process_id);
+		if (pid_struct == NULL) {
+			ret = -EINVAL;
+			printk ("Invalid PID");
+			goto err1;
+		}
 
 		// Fetching task_struct of the PID
 		tsk = pid_task(pid_struct,PIDTYPE_PID);
 
 		// Assigning pid to the vector table
-		error = change_vt(tsk, k_args->vector_table_id);
-		if (error < 0) {
-			printk("Error while assigning vt: %d", error);
+		ret = change_vt(tsk, k_args->vector_table_id);
+		if (ret < 0) {
+			printk("Error while assigning vt: %d", ret);
+		}
+				
+		err1:
 			kfree(k_args);
-		}		
+		ret1:
+			error = ret;
 		break;
 	
 	
@@ -670,7 +683,33 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		error = copy_to_user((void *)arg, &tmp_vt_id_list, sizeof(struct vt_id_list));
 	err:
 		break;
-
+	/*
+	case GET_VT:
+		error = copy_from_user(&tmp_vt_id_list, (void *)arg, sizeof(struct vt_id_list));
+		if (error)
+			goto err;
+		vt = get_vt_id_list();
+		if (IS_ERR(vt)) {
+			error = PTR_ERR(vt);
+			vt = NULL;
+			goto err;
+		}
+		printk(KERN_DEBUG "Count=%d\n", vt->vt_ids_count);	
+		printk(KERN_DEBUG "GET_FLAG\n");
+		orig_vt_ids = vt->vt_ids;
+		vt->vt_ids = tmp_vt_id_list.vt_ids;
+		error = copy_to_user((void *)arg, vt, sizeof(struct vt_id_list));
+		if (error)
+			goto err;
+		if (vt->vt_ids_count)
+			error = copy_to_user(tmp_vt_id_list.vt_ids, orig_vt_ids, sizeof(int)*(vt->vt_ids_count));
+		err:
+			if (vt != NULL && vt->vt_ids_count != 0)
+				kfree(orig_vt_ids);
+			if (vt != NULL)
+				kfree(vt);
+		break;
+	*/
 	case FIOCLEX:
 		set_close_on_exec(fd, 1);
 		break;
