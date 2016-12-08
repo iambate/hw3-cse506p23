@@ -206,12 +206,14 @@ SYSCALL_DEFINE3(getdents_wrapper, unsigned int, fd,
 		ret = sys_getdents(fd, dirent, count);
 	}
 	else if (i >= 0 && i != INT_MAX) {
+		vt_read_lock();
 		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
 		else {
 			getdents_func = current->vt->sys_map[i].sys_func;
 			ret = getdents_func(fd, dirent, count);
 		}
+		vt_read_unlock();
 	} else {
 		ret = i;
 	}
@@ -313,12 +315,14 @@ SYSCALL_DEFINE3(getdents64_wrapper, unsigned int, fd,
 		ret = sys_getdents64(fd, dirent, count);
 	}
 	else if (i >= 0 && i != INT_MAX) {
+		vt_read_lock();
 		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
 		else {
 			getdents64_func = current->vt->sys_map[i].sys_func;
 			ret = getdents64_func(fd, dirent, count);
 		}
+		vt_read_unlock();
 	} else {
 		ret = i;
 	}

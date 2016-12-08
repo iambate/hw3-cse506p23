@@ -612,12 +612,14 @@ SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t, coun
 		ret = sys_read(fd,buf,count);
 	}
 	else if (i >= 0 && i != INT_MAX) {
+		vt_read_lock();
 		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
 		else {
 			read_func = current->vt->sys_map[i].sys_func;
 			ret = read_func(fd, buf, count);
 		}
+		vt_read_unlock();
 	} else {
 		ret = i;
 	}
@@ -652,12 +654,14 @@ SYSCALL_DEFINE3(write_wrapper, unsigned int, fd, const char __user *, buf,
 		ret = sys_write(fd,buf,count);
 	}
 	else if (i >= 0 && i != INT_MAX) {
+		vt_read_lock();
 		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
 		else {
 			write_func = current->vt->sys_map[i].sys_func;
 			ret = write_func(fd, buf, count);
 		}
+		vt_read_unlock();
 	} else {
 		ret = i;
 	}

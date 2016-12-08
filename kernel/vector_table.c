@@ -11,7 +11,7 @@
 #include <linux/limits.h>
 #include <linux/mm.h>
 
-DEFINE_RWLOCK(vt_rwlock);
+DECLARE_RWSEM(vt_rwlock);
 static struct vector_table vt_head = {
 	.id = 0,
 	.vt_list = LIST_HEAD_INIT(vt_head.vt_list)
@@ -33,10 +33,10 @@ int register_vt (struct vector_table *vt)
 		return 0;
 	}
 	atomic64_set(&(vt->rc), 0);
-	write_lock(&vt_rwlock);
+	down_write(&vt_rwlock);
 	vt->id = counter++;
 	list_add(&(vt->vt_list), &(vt_head.vt_list));
-	write_unlock(&vt_rwlock);
+	up_write(&vt_rwlock);
 	return vt->id;
 }
 EXPORT_SYMBOL(register_vt);
@@ -66,7 +66,7 @@ int deregister_vt (struct vector_table *vt)
 	if (vt == NULL) {
 		return 0;
 	}
-	write_lock(&vt_rwlock);
+	down_write(&vt_rwlock);
 	list_for_each_safe(pos, tmp_lh, &(vt_head.vt_list)) {
 		tmp_vt = list_entry(pos, struct vector_table, vt_list);
 		if (tmp_vt->id == vt->id) {
@@ -81,7 +81,7 @@ int deregister_vt (struct vector_table *vt)
 		}
 	}
 out:
-	write_unlock(&vt_rwlock);
+	up_write(&vt_rwlock);
 	return err;
 }
 EXPORT_SYMBOL(deregister_vt);
@@ -99,7 +99,7 @@ int deregister_vt_id (int vt_id)
 	if (vt_id < 1) {
 		return 0;
 	}
-	write_lock(&vt_rwlock);
+	down_write(&vt_rwlock);
 	list_for_each_safe(pos, tmp_lh, &(vt_head.vt_list)) {
 		tmp_vt = list_entry(pos, struct vector_table, vt_list);
 		if (tmp_vt->id == vt_id) {
@@ -112,13 +112,13 @@ int deregister_vt_id (int vt_id)
 		}
 	}
 out:
-	write_unlock(&vt_rwlock);
+	up_write(&vt_rwlock);
 	return err;
 }
 EXPORT_SYMBOL(deregister_vt_id);
 
 /*
- * Tells is a syscall is implemented by current's vector table
+ * Tells if a syscall is implemented by current's vector table
  * INT_MAX : default
  * Any Positive Number : call the vector table's callback function
  * Any Negative Number : not implemented sys_call/error
@@ -158,13 +158,13 @@ struct vector_table *get_vt (int vt_id)
 	if (vt_id < 1) {
 		return NULL;
 	}
-	read_lock(&vt_rwlock);
+	down_read(&vt_rwlock);
 	list_for_each_entry(tmp_vt, &(vt_head.vt_list), vt_list) {
 		if (tmp_vt->id == vt_id) {
 			rc_vt = tmp_vt;
 		}
 	}
-	read_unlock(&vt_rwlock);
+	up_read(&vt_rwlock);
 	return rc_vt;
 }
 EXPORT_SYMBOL(get_vt);
@@ -192,14 +192,14 @@ struct vt_id_list *get_vt_id_list(void)
 		goto err;
 	}
 
-	read_lock(&vt_rwlock);
+	down_read(&vt_rwlock);
 	list_for_each_entry(tmp_vt, &(vt_head.vt_list), vt_list) {
 		vt_ids[count] = tmp_vt->id;
 		count ++;
 		if (count >= 1024)
 			break;
 	}
-	read_unlock(&vt_rwlock);
+	up_read(&vt_rwlock);
 
 	if (count == 0) {
 		kfree(vt_ids);
@@ -226,7 +226,7 @@ int change_vt ( struct task_struct *ts, int to_vt_id)
 {
 	struct vector_table *tmp_vt, *from_vt = NULL, *to_vt = NULL;
 	int from_vt_id = 0, rc = 0;
-	write_lock(&vt_rwlock);
+	down_write(&vt_rwlock);
 	if (ts->vt != NULL) {
 		from_vt_id = ts->vt->id;
 	}
@@ -247,7 +247,7 @@ int change_vt ( struct task_struct *ts, int to_vt_id)
 	atomic64_inc(&to_vt->rc);
 	ts->vt = to_vt;
 out:
-	write_unlock(&vt_rwlock);
+	up_write(&vt_rwlock);
 	return rc;
 }
 EXPORT_SYMBOL(change_vt);
@@ -264,3 +264,19 @@ void dec_rc_vt ( struct task_struct *ts )
 	}
 }
 EXPORT_SYMBOL(dec_rc_vt);
+
+/*
+ * Take read lock on vt
+ */
+void vt_read_lock(void) {
+	down_read(&vt_rwlock);
+}
+EXPORT_SYMBOL(vt_read_lock);
+
+/*
+ * Release read lock on vt
+ */
+void vt_read_unlock(void) {
+	up_read(&vt_rwlock);
+}
+EXPORT_SYMBOL(vt_read_unlock);
