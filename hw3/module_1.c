@@ -215,14 +215,16 @@ void create_sys_vector_2(void)
 void test_function(void)
 {
 	char *tp = NULL;
-	unsigned int fd = 999;
+	unsigned int fd = 999, fd1 = 999;
 	int err = 0;
 	mm_segment_t oldfs;
 	long (*read_func)(unsigned int fd, char __user *buf, size_t count); 
+	long (*write_func)(unsigned int fd, const char __user *buf, size_t count);
 
 	oldfs = get_fs();
 	set_fs(get_ds());
 	fd = sys_open("test.txt", O_RDONLY, 0);
+	fd1 = sys_open("test_1.txt", O_WRONLY, 0);
 	printk("fd = %u\n", fd);
 	if (fd >= 0) {
 		tp = kmalloc(sizeof(char)*16, GFP_KERNEL);
@@ -234,6 +236,12 @@ void test_function(void)
 			read_func(fd, tp, 5), vt_1->sys_map[0].sys_no, __NR_write);
 		tp[5] = '\0';
 		printk("string is %s\n", tp);
+		write_func = vt_2->sys_map[2].sys_func;
+		printk("value of write is = %ld, sys_no is: %d, original_no is:%d\n",
+			write_func(fd1, tp, 5), vt_2->sys_map[2].sys_no, __NR_write);
+		tp[5] = '\0';
+		printk("string is %s\n", tp);
+		
 		printk(" value of module ref is %p\n", vt_2->module_ref);
 		sys_close(fd);
 		kfree(tp);
@@ -245,7 +253,7 @@ void register_all_sys_vectors(void)
 {
 	create_sys_vector_1();
 	create_sys_vector_2();
-	test_function();
+	//test_function();
 }
 
 void deregister_all_sys_vectors(void)

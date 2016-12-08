@@ -36,7 +36,7 @@
 
 int main(int argc, const char *argv[])
 {
-	int rc, fd, i, new_vt_id = 1;
+	int rc, fd, fd1, i, new_vt_id = 1;
 	char *buf = (char *)malloc(4096);
 	unsigned long CLONE2_FLAG = 4096;
 	printf("Before clone2 call:\nParent process ID : %d\n", getpid());
@@ -44,6 +44,7 @@ int main(int argc, const char *argv[])
 	int id;
 	printf("Calling read:\n");
 	fd = open("test.txt", O_RDONLY);
+	fd1 = open("test_1.txt", O_WRONLY);
 	read(fd, buf, 4096);
 	printf("waiting...\nWhat should be the new VT of cloned process?\n");
 	scanf("%d", &new_vt_id);
@@ -59,6 +60,7 @@ int main(int argc, const char *argv[])
 		scanf("%d", &i);
 		fd=open("test_read.txt",O_RDONLY);
 		read(fd, buf, 4096);
+		write(fd1, buf, 4096);
 		rc = mkdir("tmp", 0777);
 		perror("Error while creating tmp directory");
 		printf("waiting...\n");
