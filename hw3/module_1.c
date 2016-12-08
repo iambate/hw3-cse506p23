@@ -14,18 +14,19 @@
 #include <linux/module.h>
 #include <linux/syscalls.h>
 #include <linux/fcntl.h>
-//#include <string.h>
-#define VT_1_NUMBER 2
-#define VT_COL_NO 2
+
+#define VT_1_NUMBER 5
+#define VT_2_NUMBER 5
 
 #define Debug 1
 
 struct vector_table *vt_1;
+struct vector_table *vt_2;
 
 long read_vt_1(unsigned int fd, char __user *buf, size_t count)
 {
 	int ret = 0;
-	char *ptr=NULL;
+	char *ptr = NULL;
 	
 	//strcpy(virus,"Virus");
 #if Debug
@@ -34,24 +35,52 @@ long read_vt_1(unsigned int fd, char __user *buf, size_t count)
 #endif
 
 	ret = sys_read(fd, buf, count);
-	if(ret>0)
+	if(ret > 0)
 	{
 		printk("buf is:%s\n",buf);
 		mm_segment_t fs;	
 		fs = get_fs();
 		set_fs(get_ds());
-		ptr=strnstr(buf, "Virus", 6);
+		ptr = strnstr(buf, "Virus", 6);
 		printk("%s\n",ptr);
-		if(ptr!=NULL)
+		if(ptr != NULL)
 		{
 			printk("There is virus in the file\n");
 		}
-		
-	 set_fs(fs);
+	 	set_fs(fs);
 	}
 #if Debug
 	printk(KERN_INFO "ret from read_sys is %d\n", ret);
-	//printk(KERN_INFO "inside read_vt_1 buf is :%s\n",buf);
+#endif
+	return ret;
+}
+
+long read_vt_2(unsigned int fd, char __user *buf, size_t count)
+{
+	int ret = 0;
+
+#if Debug
+	printk(KERN_INFO "read_vt_2 fd = %u, buf = %p, count = %lu\n",
+		fd, buf, (unsigned long)count);
+#endif
+	ret = sys_read(fd, buf, count);
+#if Debug
+	printk(KERN_INFO "ret from read_sys in read_vt_2 is %d\n", ret);
+#endif
+	return ret;
+}
+
+long write_vt_2(unsigned int fd, const char __user * buf, size_t count)
+{
+	int ret = 0;
+
+#if Debug
+	printk(KERN_INFO "write_vt_2 fd = %u, buf = %p, count = %lu\n",
+		fd, buf, (unsigned long)count);
+#endif
+	ret = sys_write(fd, buf, count);
+#if Debug
+	printk(KERN_INFO "ret from write_sys in write_vt_2 is %d\n", ret);
 #endif
 	return ret;
 }
@@ -97,46 +126,35 @@ out:
 	return err;
 }
 
-void delete_sys_vector_1(void)
+void delete_sys_vector(struct vector_table *vt)
 {
-	//int i;
-
-	if (vt_1 && vt_1->sys_map) {
-		/*for (i = 0; i < VT_1_NUMBER; i++) {
-			if (vt_1->sys_map[i])
-				kfree(vt_1->sys_map[i]);
-		}*/
-		kfree(vt_1->sys_map);
-	}
-	kfree(vt_1);
-	vt_1 = NULL;
+	if (vt && vt->sys_map)
+		kfree(vt->sys_map);
+	kfree(vt);
+	vt = NULL;
 }
 
 void create_sys_vector_1(void)
 {
-	//int i;
 	int err = 1;
 	long (*read_func)(unsigned int fd, char __user *buf, size_t count);
 
 	read_func =  read_vt_1;
 	vt_1 = kmalloc(sizeof(struct vector_table), GFP_KERNEL);
 	vt_1->sys_map_size = VT_1_NUMBER;
-	/*vt_1->sys_map = kmalloc(sizeof(int *)*VT_1_NUMBER, GFP_KERNEL);
-	for (i = 0; i < VT_1_NUMBER; i++) {
-		vt_1->sys_map[i] = kmalloc(sizeof(int)*VT_COL_NO, GFP_KERNEL);
-	}
-	vt_1->sys_map[0][0] = __NR_read;
-	vt_1->sys_map[0][1] = 1;
-	vt_1->sys_map[1][0] = __NR_write;
-	vt_1->sys_map[1][1] = -1;*/
 	vt_1->sys_map = kmalloc(sizeof(struct sys_vect)*VT_1_NUMBER, GFP_KERNEL);
-	/*for (i = 0; i < VT_1_NUMBER; i++) {
-		vt_1->sys_map[i] = kmalloc(sizeof(struct sys_vect)*VT_COL_NO, GFP_KERNEL);
-	}*/
+
 	vt_1->sys_map[0].sys_no = __NR_read;
 	vt_1->sys_map[0].sys_func = read_func;
 	vt_1->sys_map[1].sys_no = __NR_mkdir;
 	vt_1->sys_map[1].sys_func = restrictive_mkdir;
+	vt_1->sys_map[2].sys_no = __NR_link;
+	vt_1->sys_map[2].sys_func = NULL;
+	vt_1->sys_map[3].sys_no = __NR_rmdir;
+	vt_1->sys_map[3].sys_func = NULL;
+	vt_1->sys_map[4].sys_no = __NR_unlink;
+	vt_1->sys_map[4].sys_func = NULL;
+
 	vt_1->module_ref = THIS_MODULE;
 	printk("value of this module is %p\n", THIS_MODULE);
 	err = register_vt(vt_1);
@@ -144,16 +162,53 @@ void create_sys_vector_1(void)
 	printk(KERN_INFO"err from register_vt = %d\n", err);
 #endif
 	if (err <= 0) {
-		delete_sys_vector_1();
+		delete_sys_vector(vt_1);
 	}
 }
 
-void deregister_sys_vector_1(void)
+void deregister_sys_vector(struct vector_table *vt)
 {
-	printk("deregister vector 1 = %p\n", vt_1);
-	if (vt_1) {
-		deregister_vt(vt_1);
-		delete_sys_vector_1();
+	printk("deregister vector = %p\n", vt);
+	if (vt) {
+		deregister_vt(vt);
+		delete_sys_vector(vt);
+	}
+}
+
+void create_sys_vector_2(void)
+{
+	int err = 1;
+	long (*read_func)(unsigned int fd, char __user *buf, size_t count);
+	long (*write_func)(unsigned int fd, const char __user * buf, size_t count);
+
+	read_func =  read_vt_2;
+	write_func = write_vt_2;
+
+	vt_2 = kmalloc(sizeof(struct vector_table), GFP_KERNEL);
+	vt_2->sys_map_size = VT_2_NUMBER;
+	vt_2->sys_map = kmalloc(sizeof(struct sys_vect)*VT_2_NUMBER, GFP_KERNEL);
+
+	vt_2->sys_map[0].sys_no = __NR_read;
+	vt_2->sys_map[0].sys_func = read_func;
+	vt_2->sys_map[1].sys_no = __NR_mkdir;
+	vt_2->sys_map[1].sys_func = NULL;
+	vt_2->sys_map[2].sys_no = __NR_write;
+	vt_2->sys_map[2].sys_func = write_func;
+	vt_2->sys_map[3].sys_no = __NR_rmdir;
+	vt_2->sys_map[3].sys_func = NULL;
+	vt_2->sys_map[4].sys_no = __NR_link;
+	vt_2->sys_map[4].sys_func = NULL;
+
+	vt_2->module_ref = THIS_MODULE;
+#if Debug
+	printk("value of this module in vect2 is %p\n", THIS_MODULE);
+#endif	
+	err = register_vt(vt_2);
+#if Debug
+	printk(KERN_INFO"err from register_vt2 = %d\n", err);
+#endif
+	if (err <= 0) {
+		delete_sys_vector(vt_2);
 	}
 }
 
@@ -174,12 +229,12 @@ void test_function(void)
 		if (err < 0) {
 			printk("error opening %s:%d", "./var_arg.c", err);
 		}
-		read_func = vt_1->sys_map[0].sys_func;
+		read_func = vt_2->sys_map[0].sys_func;
 		printk("value of cb using void is = %ld, sys_no is: %d, original_no is:%d\n",
 			read_func(fd, tp, 5), vt_1->sys_map[0].sys_no, __NR_write);
 		tp[5] = '\0';
 		printk("string is %s\n", tp);
-		printk(" value of module ref is %p\n", vt_1->module_ref);
+		printk(" value of module ref is %p\n", vt_2->module_ref);
 		sys_close(fd);
 		kfree(tp);
 	}
@@ -189,12 +244,14 @@ void test_function(void)
 void register_all_sys_vectors(void)
 {
 	create_sys_vector_1();
+	create_sys_vector_2();
 	test_function();
 }
 
 void deregister_all_sys_vectors(void)
 {
-	deregister_sys_vector_1();
+	deregister_sys_vector(vt_1);
+	deregister_sys_vector(vt_2);
 }
 
 static int __init init_module_1(void)
