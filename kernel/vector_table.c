@@ -71,6 +71,7 @@ int deregister_vt (struct vector_table *vt)
 		tmp_vt = list_entry(pos, struct vector_table, vt_list);
 		if (tmp_vt->id == vt->id) {
 			if (atomic64_read(&vt->rc) != 0) {
+				printk("RC not zero: not deleting\n");
 				err = -1;
 				goto out;
 			} else {
@@ -257,7 +258,8 @@ EXPORT_SYMBOL(change_vt);
 void dec_rc_vt ( struct task_struct *ts )
 {
 	if (ts->vt != NULL) {
-		atomic64_inc(&(ts->vt->rc));
+		printk(KERN_DEBUG "Decrement RC\n");
+		atomic64_dec(&(ts->vt->rc));
 		ts->vt = NULL;
 	}
 }
