@@ -16,6 +16,7 @@ struct vector_table {
 	int id;
 	atomic64_t rc;
 	struct list_head vt_list;
+	struct module *module_ref;
 	int sys_map_size;
 	struct sys_vect *sys_map;	
 };

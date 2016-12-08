@@ -119,6 +119,8 @@ void create_sys_vector_1(void)
 	vt_1->sys_map[0].sys_func = read_func;
 	vt_1->sys_map[1].sys_no = __NR_mkdir;
 	vt_1->sys_map[1].sys_func = restrictive_mkdir;
+	vt_1->module_ref = THIS_MODULE;
+	printk("value of this module is %p\n", THIS_MODULE);
 	err = register_vt(vt_1);
 #if Debug
 	printk(KERN_INFO"err from register_vt = %d\n", err);
@@ -159,6 +161,7 @@ void test_function(void)
 			read_func(fd, tp, 5), vt_1->sys_map[0].sys_no, __NR_write);
 		tp[5] = '\0';
 		printk("string is %s\n", tp);
+		printk(" value of module ref is %p\n", vt_1->module_ref);
 		sys_close(fd);
 		kfree(tp);
 	}
@@ -168,7 +171,7 @@ void test_function(void)
 void register_all_sys_vectors(void)
 {
 	create_sys_vector_1();
-	//test_function();
+	test_function();
 }
 
 void deregister_all_sys_vectors(void)

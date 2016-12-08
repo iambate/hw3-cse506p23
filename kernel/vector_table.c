@@ -10,6 +10,7 @@
 #include <linux/vmalloc.h>
 #include <linux/limits.h>
 #include <linux/mm.h>
+#include <linux/module.h>
 
 DECLARE_RWSEM(vt_rwlock);
 static struct vector_table vt_head = {
@@ -243,6 +244,26 @@ int change_vt ( struct task_struct *ts, int to_vt_id)
 	}
 	if (from_vt != NULL) {
 		atomic64_dec(&from_vt->rc);
+		if (from_vt->module_ref ) {
+			if (atomic64_read(&from_vt->rc) == 0) {
+				printk(KERN_INFO "decreasing module ref of %p\n", from_vt->module_ref);
+				module_put(from_vt->module_ref);
+			}
+		}
+		else {
+			rc = -EFAULT;
+			goto out;
+		}
+	}
+	if (to_vt->module_ref ) {
+		if (atomic64_read(&to_vt->rc) == 0) {
+			try_module_get(to_vt->module_ref);
+			printk(KERN_INFO "increased module ref of %p\n", to_vt->module_ref);
+		}
+	}
+	else {
+		rc = -EFAULT;
+		goto out;
 	}
 	atomic64_inc(&to_vt->rc);
 	ts->vt = to_vt;
@@ -260,6 +281,12 @@ void dec_rc_vt ( struct task_struct *ts )
 	if (ts->vt != NULL) {
 		printk(KERN_DEBUG "Decrement RC\n");
 		atomic64_dec(&(ts->vt->rc));
+		if (ts->vt->module_ref ) {
+			if (atomic64_read(&(ts->vt->rc)) == 0) {
+				printk(KERN_INFO "decreasing module ref of %p inside dec\n", ts->vt->module_ref);
+				module_put(ts->vt->module_ref);
+			}
+		}
 		ts->vt = NULL;
 	}
 }
