@@ -613,36 +613,44 @@ out:
 int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 	     unsigned long arg)
 {
-	int error = 0, *orig_vt_ids;
-	int __user *argp = (int __user *)arg;
-	struct inode *inode = file_inode(filp);
-	//struct var_args *k_args, *tp_args;
-	struct vt_id_list *vt = NULL, tmp_vt_id_list;
+	int error, *orig_vt_ids;
+	int __user *argp;
+	struct inode *inode;
+	struct var_args *k_args, *tp_args;
+	struct vt_id_list *vt, tmp_vt_id_list;
+	pid_t pid;
+	struct pid *pid_struct;
+	struct task_struct *tsk;	
+	error = 0;
+	argp = (int __user *)arg;
+	inode = file_inode(filp);
+	vt = NULL;
 	
 	switch (cmd) {
-	/*
+	
 	case SET_FLAG:
-		printk("fd=%u\n", fd);
-		printk("cmd=%u\n", cmd);
-		printk("arg=%lu\n", arg);
+		//printk("fd=%u\n", fd);
+		//printk("cmd=%u\n", cmd);
+		//printk("arg=%lu\n", arg);
 		tp_args = (struct var_args *)arg;
 	
-		printk("tp_args->vector_table=%s\n", tp_args->vector_table);
-		printk("tp_args->pid=%s\n", tp_args->process_id);
-		printk("tp_args->all=%d\n", tp_args->all);
+		printk("tp_args->vector_table_id=%d\n", tp_args->vector_table_id);
+		printk("tp_args->pid=%d\n", tp_args->process_id);
 		
 		k_args = kmalloc(sizeof(struct var_args),GFP_KERNEL);
 		copy_from_user(k_args, arg, sizeof(struct var_args));
-		printk("k_args->vector_table=%s\n", k_args->vector_table);
-		printk("k_args->pid=%s\n", k_args->process_id);
-		printk("k_args->all=%d\n", k_args->all);
+		printk("k_args->vector_table=%d\n", k_args->vector_table_id);
+		printk("k_args->pid=%d\n", k_args->process_id);
 		printk("SET_FLAG\n");
-		
-		if ((k_args->vector_table != NULL) && (k_args->process_id != NULL) && (k_args->all == 0)) {	
-		}
-		
+
+		pid_struct = find_get_pid(k_args->process_id);
+		tsk = pid_task(pid_struct,PIDTYPE_PID);
+		error = change_vt(tsk, k_args->vector_table_id);
+		if (error < 0) {
+			printk("Error while assigning vt: %d", error);
+		}		
 		break;
-	*/
+	
 	
 	case GET_FLAG:
 		error = copy_from_user(&tmp_vt_id_list, (void *)arg, sizeof(struct vt_id_list));

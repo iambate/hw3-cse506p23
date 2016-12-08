@@ -52,14 +52,14 @@ int pass_to_kernel(int argc, char **argv){
 	
 	else if(argc == 3) {
 		args = (struct var_args*)malloc(sizeof(struct var_args));
-		args->process_id = argv[1];
-		args->vector_table_id = argv[2];
+		args->process_id = atoi(argv[1]);
+		args->vector_table_id = atoi(argv[2]);
 		printf("Process ID: %d\n", args->process_id);
 		printf("Vector Table: %d\n", args->vector_table_id);
 		retVal = ioctl(fdesc,SET_FLAG,(unsigned long)args);
 		//printf("arg address=%lu\n",(unsigned long)args);
 		perror("return");
-		printf("Return Value of ioctl: %d\n",retVal);
+		printf("Invalid Vector Table: Error: %d\n",retVal);
 	}
 
 	return 0;

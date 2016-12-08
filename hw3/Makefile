@@ -6,7 +6,10 @@ obj-m += sys_clone2.o
 
 INC=/lib/modules/$(shell uname -r)/build/arch/x86/include
 
-all: xhw3 clone2 ioctl
+all: xhw3 clone2 ioctl assign
+
+assign: assign.c
+	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi assign.c -o assign
 
 xhw3: xhw3.c
 	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi xhw3.c -o xhw3
