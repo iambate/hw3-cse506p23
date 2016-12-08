@@ -174,48 +174,56 @@ EXPORT_SYMBOL(get_vt);
 /*
  * return a user array for ioctl of maximum 1024 length
  */
-struct vt_id_list *get_vt_id_list(void)
+int get_vt_id_list(struct vt_id_list *_vt_id_list)
 {
 	/*
 	 * vt_ids can be max 1024
 	 */
-	int count = 0, retval = 0, *vt_ids = NULL;
-	struct vt_id_list *_vt_id_list = NULL;
+	char *vt_ids = NULL, *tmp = NULL;
+	int retval = 0, count = 0, tmp_len = 0, vt_ids_len = 0;
 	struct vector_table *tmp_vt;
-	vt_ids = kmalloc(sizeof(int)*1024, GFP_KERNEL);
+	vt_ids = kmalloc(_vt_id_list->vt_ids_info_len, GFP_KERNEL);
 	if (vt_ids == NULL) {
 		retval = -ENOMEM;
 		goto err;
 	}
-	_vt_id_list = kmalloc(sizeof(struct vt_id_list), GFP_KERNEL);
-	if (_vt_id_list == NULL) {
+	memset(vt_ids, 0, _vt_id_list->vt_ids_count);
+
+	tmp = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	if (tmp == NULL) {
 		retval = -ENOMEM;
 		goto err;
 	}
+	memset(tmp, 0, PAGE_SIZE);
 
 	down_read(&vt_rwlock);
 	list_for_each_entry(tmp_vt, &(vt_head.vt_list), vt_list) {
-		vt_ids[count] = tmp_vt->id;
-		count ++;
-		if (count >= 1024)
-			break;
+		count++;
+		if (tmp_len + vt_ids_len +1 < _vt_id_list->vt_ids_info_len) {
+			sprintf(tmp,"Vector ID: %d and reference count: %ld\n",
+				tmp_vt->id, atomic64_read(&tmp_vt->rc));
+			tmp_len = strlen(tmp);
+			vt_ids_len += tmp_len;
+			strcat(vt_ids, tmp);
+		}
 	}
 	up_read(&vt_rwlock);
 
 	if (count == 0) {
-		kfree(vt_ids);
 		goto out;
 	}
-	_vt_id_list->vt_ids = vt_ids;
-
+	copy_to_user(_vt_id_list->vt_ids_info, vt_ids, vt_ids_len+1);
+	_vt_id_list->vt_ids_info_len = vt_ids_len;
 out:
 	_vt_id_list->vt_ids_count = count;
-	return _vt_id_list;
 err:
 	if (vt_ids != NULL) {
 		kfree(vt_ids);
 	}
-	return ERR_PTR(retval);
+	if (tmp != NULL) {
+		kfree(tmp);
+	}
+	return retval;
 }
 EXPORT_SYMBOL(get_vt_id_list);
 

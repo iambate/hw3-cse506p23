@@ -613,17 +613,16 @@ out:
 int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 	     unsigned long arg)
 {
-	int error, *orig_vt_ids;
+	int error;
 	int __user *argp;
 	struct inode *inode;
 	struct var_args *k_args, *tp_args;
-	struct vt_id_list *vt, tmp_vt_id_list;
+	struct vt_id_list tmp_vt_id_list;
 	struct pid *pid_struct;
 	struct task_struct *tsk;	
 	error = 0;
 	argp = (int __user *)arg;
 	inode = file_inode(filp);
-	vt = NULL;
 	
 	switch (cmd) {
 	
@@ -660,28 +659,16 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 	
 	case GET_FLAG:
 		error = copy_from_user(&tmp_vt_id_list, (void *)arg, sizeof(struct vt_id_list));
-		if (error)
-			goto err;
-		vt = get_vt_id_list();
-		if (IS_ERR(vt)) {
-			error = PTR_ERR(vt);
-			vt = NULL;
-			goto err;
-		}
-		printk(KERN_DEBUG "Count=%d\n", vt->vt_ids_count);	
+		printk(KERN_DEBUG "Count=%d\n", tmp_vt_id_list.vt_ids_count);	
+		printk(KERN_DEBUG "len=%d\n", tmp_vt_id_list.vt_ids_info_len);	
 		printk(KERN_DEBUG "GET_FLAG\n");
-		orig_vt_ids = vt->vt_ids;
-		vt->vt_ids = tmp_vt_id_list.vt_ids;
-		error = copy_to_user((void *)arg, vt, sizeof(struct vt_id_list));
 		if (error)
 			goto err;
-		if (vt->vt_ids_count)
-			error = copy_to_user(tmp_vt_id_list.vt_ids, orig_vt_ids, sizeof(int)*(vt->vt_ids_count));
-		err:
-			if (vt != NULL && vt->vt_ids_count != 0)
-				kfree(orig_vt_ids);
-			if (vt != NULL)
-				kfree(vt);
+		error = get_vt_id_list(&tmp_vt_id_list);
+		if (error < 0)
+			goto err;
+		error = copy_to_user((void *)arg, &tmp_vt_id_list, sizeof(struct vt_id_list));
+	err:
 		break;
 
 	case FIOCLEX:

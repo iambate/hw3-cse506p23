@@ -35,18 +35,15 @@ int pass_to_kernel(int argc, char **argv){
 	if (argc == 2) {
 		if(strcmp(argv[1], "getall") == 0) {
 			vt = (struct vt_id_list*)malloc(sizeof(struct vt_id_list));
-			vt->vt_ids = (int *)malloc(1024* sizeof(int));
-			printf("%p\n", vt->vt_ids);
+			vt->vt_ids_info = (char *)malloc(4096);
+			vt->vt_ids_info_len = 4096;
 			printf("Argument = getall\n");
 			retVal = ioctl(fdesc,GET_FLAG,(unsigned long)vt);
 			perror("return");
 			printf("Return Value of ioctl: %d\n",retVal);
 			printf("Number of Vector Tables: %d\n", vt->vt_ids_count);
-			printf("%p\n", vt->vt_ids);
-			for (i=0; i < (vt->vt_ids_count);i++) {
-				printf("Vector Table ID: %d\n", vt->vt_ids[i]);
-			}
-			free(vt->vt_ids);
+			printf("Details: %s\n", vt->vt_ids_info);
+			free(vt->vt_ids_info);
 			free(vt);
 		}
 	}

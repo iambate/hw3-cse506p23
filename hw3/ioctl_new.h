@@ -7,6 +7,7 @@ struct var_args {
 };
 
 struct vt_id_list {
+	int vt_ids_info_len;
 	int vt_ids_count;
-	int *vt_ids;
+	char *vt_ids_info;
 };

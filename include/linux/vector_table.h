@@ -27,8 +27,9 @@ struct var_args {
 };
 
 struct vt_id_list {
+	int vt_ids_info_len;
 	int vt_ids_count;
-	int *vt_ids;
+	char *vt_ids_info;
 };
 
 int register_vt (struct vector_table *vt);
@@ -36,7 +37,7 @@ int deregister_vt (struct vector_table *vt);
 int deregister_vt_id (int vt_id);
 int is_implemented_by_vt (int sys_call_no);
 struct vector_table *get_vt (int vt_id);
-struct vt_id_list *get_vt_id_list(void);
+int get_vt_id_list(struct vt_id_list *_vt_id_list);
 int change_vt ( struct task_struct *ts, int to_vt_id);
 void dec_rc_vt ( struct task_struct *ts );
 void vt_read_lock(void);
