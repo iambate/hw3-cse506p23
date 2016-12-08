@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include "ioctl_new.h"
+#include <sys/ioctl.h>
 
 int pass_to_kernel(int argc, char **argv){
 
@@ -68,8 +69,6 @@ int pass_to_kernel(int argc, char **argv){
 
 int main(int argc, char **argv)
 {
-	char *process_id;
-	char *vector_table;
 	printf ("Number of Arguments = %d\n", argc);
 	
 	if ((argc == 2) || (argc == 3)){

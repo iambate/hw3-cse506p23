@@ -618,7 +618,6 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 	struct inode *inode;
 	struct var_args *k_args, *tp_args;
 	struct vt_id_list *vt, tmp_vt_id_list;
-	pid_t pid;
 	struct pid *pid_struct;
 	struct task_struct *tsk;	
 	error = 0;
@@ -629,25 +628,32 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 	switch (cmd) {
 	
 	case SET_FLAG:
-		//printk("fd=%u\n", fd);
-		//printk("cmd=%u\n", cmd);
-		//printk("arg=%lu\n", arg);
 		tp_args = (struct var_args *)arg;
 	
 		printk("tp_args->vector_table_id=%d\n", tp_args->vector_table_id);
 		printk("tp_args->pid=%d\n", tp_args->process_id);
 		
 		k_args = kmalloc(sizeof(struct var_args),GFP_KERNEL);
-		copy_from_user(k_args, arg, sizeof(struct var_args));
+		if(k_args == NULL)
+                        printk("Memory Allocation failed!!\n");		
+		error = copy_from_user(k_args, (void *)arg, sizeof(struct var_args));
+		if (error)
+			kfree(k_args);
 		printk("k_args->vector_table=%d\n", k_args->vector_table_id);
 		printk("k_args->pid=%d\n", k_args->process_id);
 		printk("SET_FLAG\n");
 
+		// Fetching PID of a process
 		pid_struct = find_get_pid(k_args->process_id);
+
+		// Fetching task_struct of the PID
 		tsk = pid_task(pid_struct,PIDTYPE_PID);
+
+		// Assigning pid to the vector table
 		error = change_vt(tsk, k_args->vector_table_id);
 		if (error < 0) {
 			printk("Error while assigning vt: %d", error);
+			kfree(k_args);
 		}		
 		break;
 	
