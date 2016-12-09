@@ -1,5 +1,5 @@
-EAD ME  GROUP:23----------------------------------------------------------------------
-1. Sagar Shah ()
+READ ME  GROUP:23----------------------------------------------------------------------
+1. Sagar Shah (110958554)
 2. Kunal Shah ()
 3. Swetambari Verma (110932325)
 4. Swatilekha Chaudhary ()
@@ -9,7 +9,29 @@ vector/table.  Linux makes it hard to change system calls, either globally
 or on a per process (or process group) basis.  Having different syscalls per
 process is useful for various scenarios.Our purpose is to have a different set of syscalls on per process basis.
 
-
+---------------
+BUILD STEPS AND IMPORTANT FILES:
+1. cd /usr/src/hw3-cse506p23/ (source folder)
+2. cp -f kernel.config .config
+3. make; make modules_install; make install
+4. reboot
+5. cd /usr/src/hw3-cse506p23/hw3
+	insmod sys_clone2.ko
+		- sys_clone.ko module contains functionality of clone2 system call
+	insmod module_1.ko
+		- module_1.ko contains two vectors having new of definition of few system calls
+		- After insmod, both the system vectors will be registered and each of them will be assigned a unique ID
+		  which we call vector_id
+	insmod module_2.ko
+		- module_2.ko contains two vectors having new of definition of few system calls
+		- After insmod, both the system vectors will be registered and each of them will be assigned a unique ID
+		  which we call vector_id
+	./xhw3
+		- xhw3 is a user program that showcases the functionality of clone and clone2 syscalls
+	./ioctl getall
+		- Print all the available vector table along with its reference count
+	./ioctl <pid> <vector_id>
+		- Set the vector table of process with pid <pid> to vector table having vector id <vector_id>
 ----------------
 VECTOR TABLE AND
 IOCTL
