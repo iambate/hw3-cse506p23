@@ -1709,7 +1709,8 @@ long _do_fork(unsigned long clone_flags,
 	struct task_struct *p;
 	int trace = 0;
 	long nr;
-
+	int parent_vector_id;
+	int ret;
 	/*
 	 * Determine whether and which event to report to ptracer.  When
 	 * called from kernel_thread or CLONE_UNTRACED is explicitly
@@ -1764,21 +1765,34 @@ long _do_fork(unsigned long clone_flags,
 		}
 
 		put_pid(pid);
-		if ( clone_flags & CLONE_SYSCALL)
-                {
-
-                        p->vt=current->vt;
-                        if(current->vt!=NULL)
-                        {
-                               
-				 printk("parent vector table is:%d",current->vt->id);
-                                printk("New process vector table is:%d",p->vt->id);
-                }       }
-
-		else
+		if(current->vt==NULL)
 		{
 			p->vt=NULL;
 		}
+		else
+		{
+				parent_vector_id=current->vt->id;
+       		     	  	ret=change_vt(p,parent_vector_id);
+
+                     
+                	 	     if(ret>=0)
+        	        	     {
+                               			printk("parent vector table is:%d",current->vt->id);
+                                		printk("New process vector table is:%d",p->vt->id);
+				
+               		     	     }      		 
+		}
+
+
+		if ( clone_flags & CLONE_SYSCALL)
+		{
+			p->vt=NULL;
+
+
+		}
+
+
+
 
 	} else {
 		nr = PTR_ERR(p);

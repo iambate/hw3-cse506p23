@@ -41,20 +41,26 @@ int main(int argc, const char *argv[])
 	unsigned long CLONE2_FLAG = 4096;
 	printf("Before clone2 call:\nParent process ID : %d\n", getpid());
 	//intf("The vector_id is :%d",get_vt_id())
-	int id;
+	int id,fret;
 	printf("Calling read:\n");
 	fd = open("test.txt", O_RDONLY);
 	fd1 = open("test_1.txt", O_WRONLY);
 	read(fd, buf, 4096);
 	printf("waiting...\nWhat should be the new VT of cloned process?\n");
 	scanf("%d", &new_vt_id);
-	//rc = syscall(__NR_clone, clone_flags,stack_start,i,j,0)
-	rc = syscall(__NR_clone2, SIGCHLD | CLONE_SYSCALLS, 0, NULL, NULL, 0, new_vt_id);
+	//rc = syscall(__NR_clone, SIGCHLD,0,NULL,NULL,0);
+	rc = syscall(__NR_clone2, SIGCHLD , 0, NULL, NULL, 0, new_vt_id);
 	if (rc == 0) {
 		printf("syscall returned %d (errno=%d)\n", rc, errno);
 		printf("From child: %d\n", getpid());
 		id=syscall(__NR_getvtbyid);
 		printf("waiting id in chidl is:%d\n",id);
+		fret=syscall(__NR_clone, SIGCHLD|CLONE_SYSCALLS,0,NULL,NULL,0);
+		if(fret==0)
+		{
+
+			printf("Child's child vtid is:%d\n",syscall(330));
+		}
 		printf("Calling read:\n");
 		printf("waiting...\nEnter any number to continue...\n");
 		scanf("%d", &i);
@@ -76,4 +82,5 @@ int main(int argc, const char *argv[])
 		free(buf);
 	}
 	exit(rc);
-}
+
+close(fd1);}
