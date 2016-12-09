@@ -70,10 +70,14 @@ int pass_to_kernel(int argc, char **argv)
 			args = (struct var_args *)
 					malloc(sizeof(struct var_args));
 			args->process_id = atoi(argv[2]);
-			printf("Process ID: %d\n", args->process_id);
 			retVal = ioctl(fdesc, GET_VT, (unsigned long)args);
+			if (retVal == 888)
+				printf("Invalid PID\n");
+			else {
+			printf("Process ID: %d\n", args->process_id);
 			printf("Corresponding Vector Table ID: %d\n",
 							args->vector_table_id);
+			}
 			free(args);
 		} else if ((strcmp(argv[1], "get") == 0) &&
 					(isNumber(argv[2]) != 0)) {
@@ -89,7 +93,9 @@ int pass_to_kernel(int argc, char **argv)
 			if (retVal == 999) {
 				printf("Process ID already assigned");
 				printf("to the Vector Table ID\n");
-			} else if (retVal != 0)
+			} else if (retVal == 888)
+				printf("Invalid PID\n");				
+			else if (retVal != 0)
 			printf("Invalid Process ID/Vector Table ID: %d\n",
 									retVal);
 			else {

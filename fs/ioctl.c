@@ -651,8 +651,8 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		/* Fetching PID of a process */
 		pid_struct = find_get_pid(k_args->process_id);
 		if (pid_struct == NULL) {
-			ret = -EINVAL;
-			printk("Invalid PID");
+			ret = 888;
+			printk("Invalid PID\n");
 			goto err1;
 		}
 
@@ -696,18 +696,17 @@ err:
 		k_args = kmalloc(sizeof(struct var_args), GFP_KERNEL);
 		if (k_args == NULL) {
 			printk("Memory Allocation failed!!\n");
-			error = -ENOMEM;
+			ret = -ENOMEM;
 			goto err2;
 		}
-		error = copy_from_user(k_args, (void *)arg,
+		ret = copy_from_user(k_args, (void *)arg,
 						sizeof(struct var_args));
-		printk("Process ID: %d\n", k_args->process_id);
-		if (error)
+		if (ret)
 			goto err2;
 		pid_struct = find_get_pid(k_args->process_id);
 		if (pid_struct == NULL) {
-			error = -EINVAL;
-			printk("Invalid PID");
+			ret = 888;
+			printk("Invalid PID\n");
 			goto err2;
 		}
 		/* Fetching task_struct of the PID */
@@ -716,14 +715,15 @@ err:
 		printk("vt_id: %d\n", vt_id);
 		k_args->vector_table_id = vt_id;
 
-		error = copy_to_user((void *)arg, k_args,
+		ret = copy_to_user((void *)arg, k_args,
 						sizeof(struct var_args));
-		if (error)
+		if (ret)
 			goto err2;
 		printk("k_args->vector_table=%d\n", k_args->vector_table_id);
 		printk("k_args->pid=%d\n", k_args->process_id);
 
 err2:
+			error = ret;
 			kfree(k_args);
 		break;
 
