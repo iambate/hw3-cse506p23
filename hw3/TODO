@@ -18,6 +18,17 @@
 7. Need to create install_module.sh for all modules that needs to be installed
 
 
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
+11.run two ./xhw3 and add same vector id to child, observe the issue
 
 // need to change data type of close system call, getdents as they return int and not long
 //change get_dents_64 as it return ssize_t, so return that and its wrapper should be implemented in same way

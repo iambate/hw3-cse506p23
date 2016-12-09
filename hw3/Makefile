@@ -3,10 +3,11 @@ obj-m += tp.o
 obj-m += tp2.o
 obj-m += module_1.o
 obj-m += sys_clone2.o
+obj-m += module_2.o
 
 INC=/lib/modules/$(shell uname -r)/build/arch/x86/include
 
-all: xhw3 clone2 ioctl assign
+all: xhw3 ioctl assign kernel_mod
 
 assign: assign.c
 	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi assign.c -o assign
@@ -17,7 +18,7 @@ xhw3: xhw3.c
 ioctl: ioctl.c
 	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi ioctl.c -o ioctl
 
-clone2:
+kernel_mod:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
 
 clean:
