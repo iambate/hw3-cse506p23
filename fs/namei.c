@@ -3705,7 +3705,7 @@ SYSCALL_DEFINE2(mkdir_wrapper, const char __user *, pathname, umode_t, mode)
 		ret = sys_mkdir(pathname, mode);
 	} else if (i >= 0 && i != INT_MAX) {
 		if (current->vt->sys_map == NULL ||
-			rent->vt->sys_map[i].sys_func == NULL)
+			current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
 		else {
 			mkdir_func = current->vt->sys_map[i].sys_func;
@@ -4242,7 +4242,8 @@ SYSCALL_DEFINE2(link_wrapper, const char __user *, oldname, const char __user *,
 	if (i == INT_MAX) {
 		ret = sys_link(oldname, newname);
 	} else if (i >= 0 && i != INT_MAX) {
-	if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
+	if (current->vt->sys_map == NULL ||
+		current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
 	else {
 			link_func = current->vt->sys_map[i].sys_func;

@@ -35,8 +35,35 @@ EXTENDED SYSTEM CALLS
 
 ------------------------
 CLONE/CLONE2
---System call inheritance
 
+CLONE:
+
+The behavior of clone is as follows:
+
+a) By Default, the child inherits the parent's vector table
+b) To change this default behavior and make it point to the default syscall_table(Vector id: 0),call clone with CLONE_SYSCALLS set
+
+To implement this, __do_fork was changed to support the flag and default behavior,hence "make" at kernel level is required before testing:
+
+	Call as: syscall(__NR_clone, SIGCHLD|CLONE_SYSCALLS,0,NULL,NULL,0);
+
+CLONE2:
+
+a) To make the child point to some other vector table, clone2 is called with the last parameter being the vector table id to be set
+
+Clone2 is implemented as a module:
+Steps to use the module:
+
+Inside hw3-cse506p23/hw3
+1. make clean
+2. make
+3. sh install_module
+4. insmod module_1.ko(the vector_table module)
+
+clone2
+
+        call as :  syscall(__NR_clone2, SIGCHLD , 0, NULL, NULL, 0, new_vt_id); (where new_vt_id is the vector_table id(number) to be set) 
+	Sample clone call in xhw3.c
 
 -----------------------
 LOCKING
