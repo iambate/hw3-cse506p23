@@ -74,6 +74,7 @@ long write_vt_2(unsigned int fd, const char __user * buf, size_t count)
 {
 	int ret = 0;
 
+	printk("Process :%d is writing to a file..\n",current->pid);
 #if Debug
 	printk(KERN_INFO "write_vt_2 fd = %u, buf = %p, count = %lu\n",
 		fd, buf, (unsigned long)count);
