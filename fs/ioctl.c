@@ -656,6 +656,12 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 
 		// Fetching task_struct of the PID
 		tsk = pid_task(pid_struct,PIDTYPE_PID);
+		vt_id = getvtbytask(tsk);
+		if (vt_id == k_args->vector_table_id) {
+			printk("Process ID already assigned to the Vector Table ID\n");
+			ret = 999;
+			goto err1;
+		}
 
 		// Assigning pid to the vector table
 		ret = change_vt(tsk, k_args->vector_table_id);
@@ -685,43 +691,38 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		break;
 	
 	case GET_VT:
-
-		//tp_args = (struct var_args *)arg;
-		//printk("tp_args->vector_table_id=%d\n", tp_args->vector_table_id);
-		//printk("tp_args->pid=%d\n", tp_args->process_id);
-
+		//printk("Inside GET_VT\n");
+		k_args = (struct var_args *)arg;
+		k_args = kmalloc(sizeof(struct var_args),GFP_KERNEL);
+		if(k_args == NULL) {
+                        printk("Memory Allocation failed!!\n");
+			error = -ENOMEM;
+			goto err2;
+		}
 		error = copy_from_user(k_args, (void *)arg, sizeof(struct var_args));
+		printk("Process ID: %d\n", k_args->process_id);
 		if (error)
 			goto err2;
 		pid_struct = find_get_pid(k_args->process_id);
 		if (pid_struct == NULL) {
-			ret = -EINVAL;
+			error = -EINVAL;
 			printk ("Invalid PID");
-			goto err1;
+			goto err2;
 		}
-
 		// Fetching task_struct of the PID
 		tsk = pid_task(pid_struct,PIDTYPE_PID);
-
 		vt_id = getvtbytask(tsk);
+		printk("vt_id: %d\n", vt_id);
 		k_args->vector_table_id = vt_id;
-		/*k_args = kmalloc(sizeof(struct var_args),GFP_KERNEL);
-		if(k_args == NULL) {
-                        printk("Memory Allocation failed!!\n");
-			ret = -ENOMEM;
-			goto ret2;
-		}		
-		*/
 
-		ret = copy_to_user((void *)arg, k_args, sizeof(struct var_args));
-		if (ret)
+		error = copy_to_user((void *)arg, k_args, sizeof(struct var_args));
+		if (error)
 			goto err2;
 		printk("k_args->vector_table=%d\n", k_args->vector_table_id);
 		printk("k_args->pid=%d\n", k_args->process_id);
-		printk("GET_VT\n");
-		
-		err2:
 
+	err2:
+			kfree(k_args);
 		break;
 	
 	case FIOCLEX:
