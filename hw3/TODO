@@ -14,12 +14,9 @@
 3. Clone system call
 4. Extended sys_wrappers
 5. Extended wrapper for modules
-	- Added restrictive_mkdir that will restrict process containing name httpd from making directories (Sagar)
 6. Assign vector table(locks)
 7. Need to create install_module.sh for all modules that needs to be installed
-8. Remove a.c
-9. Remove warning
-10. run checkscript.pl
+
 
 
 // need to change data type of close system call, getdents as they return int and not long

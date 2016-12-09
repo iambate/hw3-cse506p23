@@ -3704,14 +3704,12 @@ SYSCALL_DEFINE2(mkdir_wrapper, const char __user *, pathname, umode_t, mode)
 		ret = sys_mkdir(pathname, mode);
 	}
 	else if (i >= 0 && i != INT_MAX) {
-		vt_read_lock();
 		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
 		else {
 			mkdir_func = current->vt->sys_map[i].sys_func;
 			ret = mkdir_func(pathname, mode);
 		}
-		vt_read_unlock();
 	} else {
 		ret = i;
 	}
@@ -3833,14 +3831,12 @@ SYSCALL_DEFINE1(rmdir_wrapper, const char __user *, pathname)
 		ret = sys_rmdir(pathname);
 	}
 	else if (i >= 0 && i != INT_MAX) {
-		vt_read_lock();
 		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
 			ret = -EFAULT;
 		else {
 			rmdir_func = current->vt->sys_map[i].sys_func;
 			ret = rmdir_func(pathname);
 		}
-		vt_read_unlock();
 	} else {
 		ret = i;
 	}
@@ -4013,14 +4009,12 @@ SYSCALL_DEFINE1(unlink_wrapper, const char __user *, pathname)
                 ret = sys_unlink(pathname);
         }
         else if (i >= 0 && i != INT_MAX) {
-		vt_read_lock();
                 if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
                         ret = -EFAULT;
                 else {
                         unlink_func = current->vt->sys_map[i].sys_func;
                         ret = unlink_func(pathname);
                 }
-		vt_read_unlock();
         } else {
                 ret = i;
         }
@@ -4252,14 +4246,12 @@ SYSCALL_DEFINE2(link_wrapper, const char __user *, oldname, const char __user *,
                 ret = sys_link(oldname,newname);
         }
         else if (i >= 0 && i != INT_MAX) {
-		vt_read_lock();
                 if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
                         ret = -EFAULT;
                 else {
                         link_func = current->vt->sys_map[i].sys_func;
                         ret = link_func(oldname,newname);
                 }
-		vt_read_unlock();
         } else {
                 ret = i;
         }
