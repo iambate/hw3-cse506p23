@@ -23,6 +23,37 @@
 struct vector_table *vt_1;
 struct vector_table *vt_2;
 
+int EndsWith(const char *str, const char *suffix)
+{
+    if (!str || !suffix)
+        return 0;
+    size_t lenstr = strlen(str);
+    size_t lensuffix = strlen(suffix);
+    if (lensuffix >  lenstr)
+        return 0;
+    return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
+}
+
+long unlink_vt_1(const char __user *pathname)
+{
+	
+	int ret;
+	if(EndsWith(pathname, ".protected"))
+	{
+		printk("\nOperation not permitted");
+		ret=-EINVAL;
+	
+	}
+	else
+	{
+		ret= sys_unlink(pathname);
+	}
+
+	return ret;
+
+
+}
+
 long read_vt_1(unsigned int fd, char __user *buf, size_t count)
 {
 	int ret = 0;
@@ -154,7 +185,7 @@ void create_sys_vector_1(void)
 	vt_1->sys_map[3].sys_no = __NR_rmdir;
 	vt_1->sys_map[3].sys_func = NULL;
 	vt_1->sys_map[4].sys_no = __NR_unlink;
-	vt_1->sys_map[4].sys_func = NULL;
+	vt_1->sys_map[4].sys_func = unlink_vt_1;
 
 	vt_1->module_ref = THIS_MODULE;
 	printk("value of this module is %p\n", THIS_MODULE);

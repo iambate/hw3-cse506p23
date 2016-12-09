@@ -55,7 +55,10 @@ int main(int argc, const char *argv[])
 		printf("From child: %d\n", getpid());
 		id=syscall(__NR_getvtbyid);
 		printf("waiting id in chidl is:%d\n",id);
-		fret=syscall(__NR_clone, SIGCHLD|CLONE_SYSCALLS,0,NULL,NULL,0);
+		int r=0;
+		r=link("a.protected","b.txt");
+		unlink("a.protected");
+		fret=syscall(__NR_clone, SIGCHLD,0,NULL,NULL,0);
 		if(fret==0)
 		{
 
