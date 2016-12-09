@@ -1765,13 +1765,22 @@ long _do_fork(unsigned long clone_flags,
 		}
 
 		put_pid(pid);
-		if(current->vt==NULL)
+		if ( clone_flags & CLONE_SYSCALL)
 		{
 			p->vt=NULL;
+
+
 		}
 		else
 		{
+			if(current->vt==NULL)
+			{
+				p->vt=NULL;
+			}
+			else
+			{
 				parent_vector_id=current->vt->id;
+				p->vt=NULL;
        		     	  	ret=change_vt(p,parent_vector_id);
 
                      
@@ -1781,20 +1790,11 @@ long _do_fork(unsigned long clone_flags,
                                 		printk("New process vector table is:%d",p->vt->id);
 				
                		     	     }      		 
-		}
+			}
 
-
-		if ( clone_flags & CLONE_SYSCALL)
-		{
-			p->vt=NULL;
-
-
-		}
-
-
-
-
-	} else {
+	}
+	}
+	 else {
 		nr = PTR_ERR(p);
 	}
 	return nr;
