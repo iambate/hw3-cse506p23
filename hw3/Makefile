@@ -7,13 +7,17 @@ obj-m += module_2.o
 
 INC=/lib/modules/$(shell uname -r)/build/arch/x86/include
 
-all: xhw3 ioctl assign kernel_mod
+all: xhw3 ioctl assign kernel_mod test_clone
 
 assign: assign.c
 	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi assign.c -o assign
 
 xhw3: xhw3.c
 	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi xhw3.c -o xhw3
+
+test_clone: test_clone.c
+	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi test_clone.c -o test_clone
+
 
 ioctl: ioctl.c
 	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi ioctl.c -o ioctl
