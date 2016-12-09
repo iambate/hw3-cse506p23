@@ -41,4 +41,7 @@ struct vector_table *get_vt (int vt_id);
 int get_vt_id_list(struct vt_id_list *_vt_id_list);
 int change_vt ( struct task_struct *ts, int to_vt_id);
 void dec_rc_vt ( struct task_struct *ts );
+void vt_read_lock(void);
+void vt_read_unlock(void);
+long getvtbytask(struct task_struct *tsk);
 #endif

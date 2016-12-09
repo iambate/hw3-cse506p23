@@ -69,15 +69,13 @@ int pass_to_kernel(int argc, char **argv){
 	
 	else if(argc == 3) {
 		
-			/*			
+						
 			if ( (strcmp(argv[1], "get") == 0) && (isNumber(argv[2]) == 0) ) { 
 				args = (struct var_args*)malloc(sizeof(struct var_args));
 				args->process_id = atoi(argv[1]);
-				args->vector_table_id = NULL;
 
-				retVal = ioctl(fdesc,GET_VT,(unsigned long)args);
-				//printf("arg address=%lu\n",(unsigned long)args);
-
+				retVal = ioctl(fdesc, GET_VT, (unsigned long)args);
+				printf("Corresponding Vector Table ID: %d\n", args->vector_table_id);
 				perror("Return");
 				if (retVal != 0)
 					printf("Invalid Process ID: Error: %d\n",retVal);
@@ -88,7 +86,7 @@ int pass_to_kernel(int argc, char **argv){
 				printf("Invalid Process ID\n");
 				retVal = EINVAL;			
 			}
-			*/
+			
 
 			if ( (isNumber(argv[1]) == 0) && (isNumber(argv[2]) == 0) ) {
 	

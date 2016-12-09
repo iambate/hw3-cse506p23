@@ -54,6 +54,16 @@ long sys_getvtbyid(void)
 
 EXPORT_SYMBOL(sys_getvtbyid);
 
+long getvtbytask(struct task_struct *tsk)
+{
+	if(tsk->vt == NULL)
+                return 0;
+	else 
+        	return tsk->vt->id;
+}
+EXPORT_SYMBOL(getvtbytask);
+
+
 /*
  * return 0 or negative number on error
  * 	-1: still is use
