@@ -1,5 +1,5 @@
 #include <asm/page.h>
-#include <asm/uaccess.h>
+#include <linux/uaccess.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
 #include <linux/gfp.h>
@@ -25,7 +25,7 @@ struct vector_table *vt_2;
 
 int EndsWith(const char *str, const char *suffix)
 {
-    	size_t lenstr;
+	size_t lenstr;
 	size_t lensuffix;
 
 	if (!str || !suffix)
@@ -33,7 +33,7 @@ int EndsWith(const char *str, const char *suffix)
 	lenstr = strlen(str);
 	lensuffix = strlen(suffix);
 	if (lensuffix >  lenstr)
-	 	return 0;
+		return 0;
 	return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
@@ -62,13 +62,10 @@ long protected_unlink(const char __user *pathname)
 		goto out;
 	}
 
-	if(EndsWith(path, ".protected"))
-	{
+	if (EndsWith(path, ".protected")) {
 		printk(KERN_ERR "Operation not permitted\n");
 		ret = -EINVAL;
-	}
-	else
-	{
+	} else {
 		ret = sys_unlink(pathname);
 	}
 	printk(KERN_INFO "Protected_Unlink returns with %d\n", ret);
@@ -89,8 +86,7 @@ long verify_read_6(unsigned int fd, char __user *buf, size_t count)
 #endif
 
 	ret = sys_read(fd, buf, count);
-	if(ret > 0 && fd > 2)
-	{
+	if (ret > 0 && fd > 2) {
 		buf_6 = kmalloc(sizeof(char)*6, GFP_KERNEL);
 		if (!buf_6) {
 			printk(KERN_ERR "kmalloc failed\n");
@@ -103,15 +99,13 @@ long verify_read_6(unsigned int fd, char __user *buf, size_t count)
 			ret = -EFAULT;
 			goto out;
 		}
-		
+
 		ptr = strnstr(buf_6, "Virus", 6);
 #if Debug
-		printk("%s\n",ptr);
+		printk(KERN_INFO "%s\n", ptr);
 #endif
-		if(ptr != NULL)
-		{
+		if (ptr != NULL)
 			printk(KERN_ERR "There is virus in the file\n");
-		}
 out:
 		kfree(buf_6);
 	}
@@ -167,11 +161,11 @@ direct:
 		fd, buf, (unsigned long)count, err);
 #endif
 out:
-	if ( fcmdline != NULL)
+	if (fcmdline != NULL)
 		filp_close(fcmdline, NULL);
-	if ( path_buf != NULL)
+	if (path_buf != NULL)
 		kfree(path_buf);
-	if ( name_buf != NULL)
+	if (name_buf != NULL)
 		kfree(name_buf);
 
 #if Debug
@@ -180,7 +174,7 @@ out:
 	return err;
 }
 
-long restrictive_write(unsigned int fd, const char __user * buf, size_t count)
+long restrictive_write(unsigned int fd, const char __user *buf, size_t count)
 {
 	char *path_buf = NULL, *name_buf = NULL;
 	struct file *fcmdline = NULL;
@@ -226,16 +220,16 @@ direct:
 	printk(KERN_INFO "ret in restrictive_write is %d\n", err);
 #endif
 out:
-	if ( fcmdline != NULL)
+	if (fcmdline != NULL)
 		filp_close(fcmdline, NULL);
-	if ( path_buf != NULL)
+	if (path_buf != NULL)
 		kfree(path_buf);
-	if ( name_buf != NULL)
+	if (name_buf != NULL)
 		kfree(name_buf);
 	return err;
 }
 
-long restrictive_mkdir(const char __user * pathname, umode_t mode)
+long restrictive_mkdir(const char __user *pathname, umode_t mode)
 {
 	char *path_buf = NULL, *name_buf = NULL;
 	struct file *fcmdline = NULL;
@@ -269,23 +263,25 @@ long restrictive_mkdir(const char __user * pathname, umode_t mode)
 	err = sys_mkdir(pathname, mode);
 #if Debug
 	printk(KERN_INFO "RESTRICTIVE_MKDIR sys_call with pathname = %s,"
-		" mode = %lu returned with %d\n", pathname, (unsigned long)mode, err);
+		" mode = %lu returned with %d\n", pathname,
+		(unsigned long)mode, err);
 #endif
 out:
-	if ( fcmdline != NULL)
+	if (fcmdline != NULL)
 		filp_close(fcmdline, NULL);
-	if ( path_buf != NULL)
+	if (path_buf != NULL)
 		kfree(path_buf);
-	if ( name_buf != NULL)
+	if (name_buf != NULL)
 		kfree(name_buf);
 	return err;
 }
 
-long restrictive_rmdir(const char __user * pathname)
+long restrictive_rmdir(const char __user *pathname)
 {
 	char *path_buf = NULL, *name_buf = NULL;
 	struct file *fcmdline = NULL;
 	int err = 0, readnums;
+
 	path_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
 	if (path_buf == NULL) {
 		err = -ENOMEM;
@@ -317,11 +313,11 @@ long restrictive_rmdir(const char __user * pathname)
 		" returned with %d\n", pathname, err);
 #endif
 out:
-	if ( fcmdline != NULL)
+	if (fcmdline != NULL)
 		filp_close(fcmdline, NULL);
-	if ( path_buf != NULL)
+	if (path_buf != NULL)
 		kfree(path_buf);
-	if ( name_buf != NULL)
+	if (name_buf != NULL)
 		kfree(name_buf);
 	return err;
 }
@@ -346,7 +342,8 @@ void create_sys_vector_1(void)
 	}
 
 	vt_1->sys_map_size = VT_1_NUMBER;
-	vt_1->sys_map = kmalloc(sizeof(struct sys_vect)*VT_1_NUMBER, GFP_KERNEL);
+	vt_1->sys_map = kmalloc(sizeof(struct sys_vect)*VT_1_NUMBER,
+				GFP_KERNEL);
 	if (!vt_1->sys_map) {
 		printk(KERN_ERR "kmalloc failed\n");
 		err = -ENOMEM;
@@ -366,16 +363,16 @@ void create_sys_vector_1(void)
 
 	vt_1->module_ref = THIS_MODULE;
 #if Debug
-	printk("value of this module is %p\n", THIS_MODULE);
+	printk(KERN_INFO "value of this module is %p\n", THIS_MODULE);
 #endif
 	err = register_vt(vt_1);
 out:
 #if Debug
 	printk(KERN_INFO"err from register_vt = %d\n", err);
 #endif
-	if (err <= 0 && vt_1) {
+	if (err <= 0 && vt_1)
 		delete_sys_vector(vt_1);
-	}
+
 	printk(KERN_INFO "Registering vector 1 =  %p of module 1 "
 		"with id = %d\n", vt_1, err);
 }
@@ -401,7 +398,8 @@ void create_sys_vector_2(void)
 	}
 
 	vt_2->sys_map_size = VT_2_NUMBER;
-	vt_2->sys_map = kmalloc(sizeof(struct sys_vect)*VT_2_NUMBER, GFP_KERNEL);
+	vt_2->sys_map = kmalloc(sizeof(struct sys_vect)*VT_2_NUMBER,
+				GFP_KERNEL);
 	if (!vt_2->sys_map) {
 		printk(KERN_ERR "kmalloc failed\n");
 		err = -ENOMEM;
@@ -421,16 +419,16 @@ void create_sys_vector_2(void)
 
 	vt_2->module_ref = THIS_MODULE;
 #if Debug
-	printk("value of this module in vect2 is %p\n", THIS_MODULE);
-#endif	
+	printk(KERN_INFO "value of this module in vect2 is %p\n", THIS_MODULE);
+#endif
 	err = register_vt(vt_2);
 out:
 #if Debug
 	printk(KERN_INFO"err from register_vt2 = %d\n", err);
 #endif
-	if (err <= 0 && vt_2 ) {
+	if (err <= 0 && vt_2)
 		delete_sys_vector(vt_2);
-	}
+
 	printk(KERN_INFO "Registering vector 2 =  %p of module 1 "
 		"with id = %d\n", vt_2, err);
 }
@@ -441,8 +439,9 @@ void test_function(void)
 	unsigned int fd = 999, fd1 = 999;
 	int err = 0;
 	mm_segment_t oldfs;
-	long (*read_func)(unsigned int fd, char __user *buf, size_t count); 
-	long (*write_func)(unsigned int fd, const char __user *buf, size_t count);
+	long (*read_func)(unsigned int fd, char __user *buf, size_t count);
+	long (*write_func)(unsigned int fd, const char __user *buf,
+				size_t count);
 
 	oldfs = get_fs();
 	set_fs(get_ds());
@@ -451,21 +450,25 @@ void test_function(void)
 	printk("fd = %u\n", fd);
 	if (fd >= 0) {
 		tp = kmalloc(sizeof(char)*16, GFP_KERNEL);
-		if (err < 0) {
-			printk("error opening %s:%d", "./var_arg.c", err);
-		}
+		if (err < 0)
+			printk(KERN_ERR "error opening %s:%d", "./var_arg.c"
+			, err);
 		read_func = vt_2->sys_map[0].sys_func;
-		printk("value of cb using void is = %ld, sys_no is: %d, original_no is:%d\n",
-			read_func(fd, tp, 5), vt_1->sys_map[0].sys_no, __NR_write);
+		printk(KERN_INFO "value of cb using void is = %ld, "
+			"sys_no is: %d, original_no is:%d\n",
+			read_func(fd, tp, 5), vt_1->sys_map[0].sys_no,
+			__NR_write);
 		tp[5] = '\0';
-		printk("string is %s\n", tp);
+		printk(KERN_INFO "string is %s\n", tp);
 		write_func = vt_2->sys_map[2].sys_func;
-		printk("value of write is = %ld, sys_no is: %d, original_no is:%d\n",
-			write_func(fd1, tp, 5), vt_2->sys_map[2].sys_no, __NR_write);
+		printk(KERN_INFO "value of write is = %ld, sys_no is: %d,"
+			" original_no is:%d\n", write_func(fd1, tp, 5),
+			vt_2->sys_map[2].sys_no, __NR_write);
 		tp[5] = '\0';
-		printk("string is %s\n", tp);
-		
-		printk(" value of module ref is %p\n", vt_2->module_ref);
+		printk(KERN_INFO "string is %s\n", tp);
+
+		printk(KERN_INFO " value of module ref is %p\n",
+			vt_2->module_ref);
 		sys_close(fd);
 		kfree(tp);
 	}
@@ -476,7 +479,7 @@ void register_all_sys_vectors(void)
 {
 	create_sys_vector_1();
 	create_sys_vector_2();
-	//test_function();
+	/*test_function();*/
 }
 
 void deregister_all_sys_vectors(void)
@@ -487,14 +490,14 @@ void deregister_all_sys_vectors(void)
 
 static int __init init_module_1(void)
 {
-	printk("installed  module_1\n");
+	printk(KERN_INFO "installed  module_1\n");
 	register_all_sys_vectors();
 	return 0;
 }
 static void  __exit exit_module_1(void)
 {
 	deregister_all_sys_vectors();
-	printk("removed module_1\n");
+	printk(KERN_INFO "removed module_1\n");
 }
 module_init(init_module_1);
 module_exit(exit_module_1);

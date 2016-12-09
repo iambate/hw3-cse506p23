@@ -1,5 +1,5 @@
 #include <asm/page.h>
-#include <asm/uaccess.h>
+#include <linux/uaccess.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
 #include <linux/gfp.h>
@@ -44,7 +44,7 @@ long read_logger(unsigned int fd, char __user *buf, size_t count)
 	return ret;
 }
 
-long write_logger(unsigned int fd, const char __user * buf, size_t count)
+long write_logger(unsigned int fd, const char __user *buf, size_t count)
 {
 	int ret = 0;
 
@@ -66,7 +66,7 @@ long write_logger(unsigned int fd, const char __user * buf, size_t count)
 	return ret;
 }
 
-long mkdir_logger(const char __user * pathname, umode_t mode)
+long mkdir_logger(const char __user *pathname, umode_t mode)
 {
 	int err = 0;
 	char *path = NULL;
@@ -101,7 +101,7 @@ out:
 	return err;
 }
 
-long rmdir_logger(const char __user * pathname)
+long rmdir_logger(const char __user *pathname)
 {
 	int err = 0;
 	char *path = NULL;
@@ -149,7 +149,8 @@ void create_sys_vector_1(void)
 
 	vt_1 = kmalloc(sizeof(struct vector_table), GFP_KERNEL);
 	vt_1->sys_map_size = VT_1_NUMBER;
-	vt_1->sys_map = kmalloc(sizeof(struct sys_vect)*VT_1_NUMBER, GFP_KERNEL);
+	vt_1->sys_map = kmalloc(sizeof(struct sys_vect)*VT_1_NUMBER,
+				GFP_KERNEL);
 
 	vt_1->sys_map[0].sys_no = __NR_read;
 	vt_1->sys_map[0].sys_func = read_logger;
@@ -170,9 +171,8 @@ void create_sys_vector_1(void)
 #if Debug
 	printk(KERN_INFO "err from register_vt = %d\n", err);
 #endif
-	if (err <= 0) {
+	if (err <= 0)
 		delete_sys_vector(vt_1);
-	}
 	printk(KERN_INFO "Registering vector 1 =  %p of module 2 "
 		"with id = %d\n", vt_1, err);
 }
@@ -194,7 +194,8 @@ void create_sys_vector_2(void)
 
 	vt_2 = kmalloc(sizeof(struct vector_table), GFP_KERNEL);
 	vt_2->sys_map_size = VT_2_NUMBER;
-	vt_2->sys_map = kmalloc(sizeof(struct sys_vect)*VT_2_NUMBER, GFP_KERNEL);
+	vt_2->sys_map = kmalloc(sizeof(struct sys_vect)*VT_2_NUMBER,
+				GFP_KERNEL);
 
 	vt_2->sys_map[0].sys_no = __NR_read;
 	vt_2->sys_map[0].sys_func = NULL;
@@ -209,15 +210,14 @@ void create_sys_vector_2(void)
 
 	vt_2->module_ref = THIS_MODULE;
 #if Debug
-	printk("value of this module in vect2 is %p\n", THIS_MODULE);
-#endif	
+	printk(KERN_INFO "value of this module in vect2 is %p\n", THIS_MODULE);
+#endif
 	err = register_vt(vt_2);
 #if Debug
 	printk(KERN_INFO"err from register_vt2 = %d\n", err);
 #endif
-	if (err <= 0) {
+	if (err <= 0)
 		delete_sys_vector(vt_2);
-	}
 	printk(KERN_INFO "Registering vector 2 =  %p of module 2 "
 		"with id = %d\n", vt_2, err);
 }
@@ -228,8 +228,9 @@ void test_function(void)
 	unsigned int fd = 999, fd1 = 999;
 	int err = 0;
 	mm_segment_t oldfs;
-	long (*read_func)(unsigned int fd, char __user *buf, size_t count); 
-	long (*write_func)(unsigned int fd, const char __user *buf, size_t count);
+	long (*read_func)(unsigned int fd, char __user *buf, size_t count);
+	long (*write_func)(unsigned int fd, const char __user *buf,
+				size_t count);
 
 	oldfs = get_fs();
 	set_fs(get_ds());
@@ -238,21 +239,26 @@ void test_function(void)
 	printk("fd = %u\n", fd);
 	if (fd >= 0) {
 		tp = kmalloc(sizeof(char)*16, GFP_KERNEL);
-		if (err < 0) {
-			printk("error opening %s:%d", "./var_arg.c", err);
-		}
+		if (err < 0)
+			printk(KERN_INFO "error opening %s:%d",
+				"./var_arg.c", err);
 		read_func = vt_2->sys_map[0].sys_func;
-		printk("value of cb using void is = %ld, sys_no is: %d, original_no is:%d\n",
-			read_func(fd, tp, 5), vt_1->sys_map[0].sys_no, __NR_write);
+		printk(KERN_INFO "value of cb using void is = %ld,"
+			" sys_no is: %d, original_no is:%d\n",
+			read_func(fd, tp, 5), vt_1->sys_map[0].sys_no,
+			__NR_write);
 		tp[5] = '\0';
-		printk("string is %s\n", tp);
+		printk(KERN_INFO "string is %s\n", tp);
 		write_func = vt_2->sys_map[2].sys_func;
-		printk("value of write is = %ld, sys_no is: %d, original_no is:%d\n",
-			write_func(fd1, tp, 5), vt_2->sys_map[2].sys_no, __NR_write);
+		printk(KERN_INFO "value of write is = %ld, "
+			"sys_no is: %d, original_no is:%d\n",
+			write_func(fd1, tp, 5), vt_2->sys_map[2].sys_no,
+			__NR_write);
 		tp[5] = '\0';
-		printk("string is %s\n", tp);
-		
-		printk(" value of module ref is %p\n", vt_2->module_ref);
+		printk(KERN_INFO "string is %s\n", tp);
+
+		printk(KERN_INFO "value of module ref is %p\n",
+			vt_2->module_ref);
 		sys_close(fd);
 		kfree(tp);
 	}
@@ -263,7 +269,7 @@ void register_all_sys_vectors(void)
 {
 	create_sys_vector_1();
 	create_sys_vector_2();
-	//test_function();
+	/*test_function();*/
 }
 
 void deregister_all_sys_vectors(void)
@@ -274,14 +280,14 @@ void deregister_all_sys_vectors(void)
 
 static int __init init_module_2(void)
 {
-	printk("installed  module_2\n");
+	printk(KERN_INFO "installed  module_2\n");
 	register_all_sys_vectors();
 	return 0;
 }
 static void  __exit exit_module_2(void)
 {
 	deregister_all_sys_vectors();
-	printk("removed module_2\n");
+	printk(KERN_INFO "removed module_2\n");
 }
 module_init(init_module_2);
 module_exit(exit_module_2);
