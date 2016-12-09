@@ -83,6 +83,7 @@
 #include <asm/mmu_context.h>
 #include <asm/cacheflush.h>
 #include <asm/tlbflush.h>
+#include <linux/rwlock_types.h>
 
 #include <trace/events/sched.h>
 
@@ -1765,7 +1766,8 @@ long _do_fork(unsigned long clone_flags,
 		}
 
 		put_pid(pid);
-		if ( clone_flags & CLONE_SYSCALL)
+		__RW_LOCK_UNLOCKED(p->tsk_vt_rwlock);
+		if (clone_flags & CLONE_SYSCALL)
 		{
 			p->vt=NULL;
 
@@ -1792,7 +1794,7 @@ long _do_fork(unsigned long clone_flags,
                		     	     }      		 
 			}
 
-	}
+		}
 	}
 	 else {
 		nr = PTR_ERR(p);

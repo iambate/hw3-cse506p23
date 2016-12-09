@@ -61,6 +61,8 @@ struct sched_param {
 #include <linux/gfp.h>
 #include <linux/magic.h>
 #include <linux/cgroup-defs.h>
+#include <linux/rwsem.h>
+#include <linux/mutex.h>
 
 #include <asm/processor.h>
 
@@ -1398,8 +1400,6 @@ struct task_struct {
 	atomic_t usage;
 	unsigned int flags;	/* per process flags, defined below */
 	unsigned int ptrace;
-	void* test;
-	unsigned int swati;
 
 #ifdef CONFIG_SMP
 	struct llist_node wake_entry;
@@ -1527,6 +1527,7 @@ struct task_struct {
 	 */
 	struct list_head vt_head;
 	struct vector_table *vt;
+	rwlock_t tsk_vt_rwlock;
 
 	/*
 	 * ptraced is the list of tasks this task is using ptrace on.

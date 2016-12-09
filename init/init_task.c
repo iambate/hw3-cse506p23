@@ -7,6 +7,8 @@
 #include <linux/init.h>
 #include <linux/fs.h>
 #include <linux/mm.h>
+#include <linux/rwsem.h>
+#include <linux/mutex.h>
 
 #include <asm/pgtable.h>
 #include <asm/uaccess.h>

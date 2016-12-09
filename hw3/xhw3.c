@@ -64,7 +64,14 @@ int main(int argc, const char *argv[])
 		
 		if(fret==0)
 		{
-			printf("Child's child vtid is:%ld\n", syscall(330));
+
+			printf("Child's child vtid is:%d\n",syscall(330));
+			printf("waiting...\nEnter any number to continue...\n");
+			scanf("%d", &i);
+			return 0;
+		}
+		else {
+			wait(NULL);
 		}
 		printf("PID 2: %d\n", getpid());
 		wait(NULL);
@@ -87,14 +94,13 @@ int main(int argc, const char *argv[])
 		printf("waiting...\n");
 		scanf("%d", &i);
 		printf("From child: %d\n", getpid());
-		printf("The vector_id is :%d",id);
+		printf("The vector_id is :%d\n",id);
 		free(buf);
 	} else {
 		wait(NULL);
-		id = syscall(330);
-		printf("\nwaiting id in parent is:%d",id);
+		id=syscall(330);
+		printf("\nwaiting id in parent is:%d\n",id);
 		printf("syscall returned %d\n", rc);
-		wait(NULL);
 		free(buf);
 	}
 	//exit(rc);

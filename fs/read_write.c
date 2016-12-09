@@ -600,31 +600,36 @@ static inline void file_pos_write(struct file *file, loff_t pos)
 	file->f_pos = pos;
 }
 
-SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t, count)
+SYSCALL_DEFINE3(read_wrapper, unsigned int, fd, char __user *, buf, size_t,
+		count)
 {
-	//struct fd f = fdget_pos(fd);
-	long (*read_func)(unsigned int fd, char __user * buf, size_t count);
-	ssize_t ret = -EBADF;
+	long (*read_func)(unsigned int fd, char __user *buf, size_t count);
+	ssize_t ret = 0;
 	int i = INT_MAX;
 
+	read_lock(&current->tsk_vt_rwlock);
 	i = is_implemented_by_vt(__NR_read);
-	if(i == INT_MAX) {
-		ret = sys_read(fd,buf,count);
-	}
-	else if (i >= 0 && i != INT_MAX) {
-		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
+	if (i == INT_MAX) {
+		read_unlock(&current->tsk_vt_rwlock);
+		ret = sys_read(fd, buf, count);
+	} else if (i >= 0 && i != INT_MAX) {
+		if (current->vt->sys_map == NULL ||
+		    current->vt->sys_map[i].sys_func == NULL) {
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = -EFAULT;
-		else {
+		} else {
 			read_func = current->vt->sys_map[i].sys_func;
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = read_func(fd, buf, count);
 		}
 	} else {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = i;
 	}
 	return ret;
 }
 
-long sys_read( unsigned int fd, char __user * buf, size_t count)
+long sys_read(unsigned int fd, char __user *buf, size_t count)
 {
 	struct fd f = fdget_pos(fd);
 	ssize_t ret = -EBADF;
@@ -643,28 +648,33 @@ EXPORT_SYMBOL(sys_read);
 SYSCALL_DEFINE3(write_wrapper, unsigned int, fd, const char __user *, buf,
 		size_t, count)
 {
-	long (*write_func)(unsigned int fd, const char __user * buf, size_t count);
+	long (*write_func)(unsigned int fd, const char __user *buf, size_t count);
 	ssize_t ret = -EBADF;
 	int i = INT_MAX;
 
+	read_lock(&current->tsk_vt_rwlock);
 	i = is_implemented_by_vt(__NR_write);
-	if(i == INT_MAX) {
-		ret = sys_write(fd,buf,count);
-	}
-	else if (i >= 0 && i != INT_MAX) {
-		if (current->vt->sys_map == NULL || current->vt->sys_map[i].sys_func == NULL)
+	if (i == INT_MAX) {
+		read_unlock(&current->tsk_vt_rwlock);
+		ret = sys_write(fd, buf, count);
+	} else if (i >= 0 && i != INT_MAX) {
+		if (current->vt->sys_map == NULL ||
+		    current->vt->sys_map[i].sys_func == NULL) {
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = -EFAULT;
-		else {
+		} else {
 			write_func = current->vt->sys_map[i].sys_func;
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = write_func(fd, buf, count);
 		}
 	} else {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = i;
 	}
 	return ret;
 }
 
-long sys_write(unsigned int fd, const char __user * buf, size_t count)
+long sys_write(unsigned int fd, const char __user *buf, size_t count)
 {
 	struct fd f = fdget_pos(fd);
 	ssize_t ret = -EBADF;

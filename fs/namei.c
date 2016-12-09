@@ -3700,18 +3700,23 @@ SYSCALL_DEFINE2(mkdir_wrapper, const char __user *, pathname, umode_t, mode)
 	int i;
 
 	i = INT_MAX;
+	read_lock(&current->tsk_vt_rwlock);
 	i = is_implemented_by_vt(__NR_mkdir);
 	if (i == INT_MAX) {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = sys_mkdir(pathname, mode);
 	} else if (i >= 0 && i != INT_MAX) {
 		if (current->vt->sys_map == NULL ||
-			current->vt->sys_map[i].sys_func == NULL)
+		    current->vt->sys_map[i].sys_func == NULL) {
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = -EFAULT;
-		else {
+		} else {
 			mkdir_func = current->vt->sys_map[i].sys_func;
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = mkdir_func(pathname, mode);
 		}
 	} else {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = i;
 	}
 	return ret;
@@ -3828,18 +3833,23 @@ SYSCALL_DEFINE1(rmdir_wrapper, const char __user *, pathname)
 	int i;
 
 	i = INT_MAX;
+	read_lock(&current->tsk_vt_rwlock);
 	i = is_implemented_by_vt(__NR_rmdir);
 	if (i == INT_MAX) {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = sys_rmdir(pathname);
 	} else if (i >= 0 && i != INT_MAX) {
 		if (current->vt->sys_map == NULL ||
-			 current->vt->sys_map[i].sys_func == NULL)
+		    current->vt->sys_map[i].sys_func == NULL) {
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = -EFAULT;
-		else {
+		} else {
 			rmdir_func = current->vt->sys_map[i].sys_func;
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = rmdir_func(pathname);
 		}
 	} else {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = i;
 	}
 	return ret;
@@ -4005,18 +4015,23 @@ SYSCALL_DEFINE1(unlink_wrapper, const char __user *, pathname)
 	ssize_t ret = -EBADF;
 	int i = INT_MAX;
 
+	read_lock(&current->tsk_vt_rwlock);
 	i = is_implemented_by_vt(__NR_unlink);
 	if (i == INT_MAX) {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = sys_unlink(pathname);
 	} else if (i >= 0 && i != INT_MAX) {
-			if (current->vt->sys_map == NULL ||
-			current->vt->sys_map[i].sys_func == NULL)
+		if (current->vt->sys_map == NULL ||
+		    current->vt->sys_map[i].sys_func == NULL) {
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = -EFAULT;
-		else {
+		} else {
 			unlink_func = current->vt->sys_map[i].sys_func;
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = unlink_func(pathname);
 		}
 	} else {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = i;
 	}
 	return ret;
@@ -4238,18 +4253,23 @@ SYSCALL_DEFINE2(link_wrapper, const char __user *, oldname, const char __user *,
 	ssize_t ret = -EBADF;
 	int i = INT_MAX;
 
+	read_lock(&current->tsk_vt_rwlock);
 	i = is_implemented_by_vt(__NR_link);
 	if (i == INT_MAX) {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = sys_link(oldname, newname);
 	} else if (i >= 0 && i != INT_MAX) {
-	if (current->vt->sys_map == NULL ||
-		current->vt->sys_map[i].sys_func == NULL)
+		if (current->vt->sys_map == NULL ||
+		    current->vt->sys_map[i].sys_func == NULL) {
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = -EFAULT;
-	else {
+		} else {
 			link_func = current->vt->sys_map[i].sys_func;
+			read_unlock(&current->tsk_vt_rwlock);
 			ret = link_func(oldname, newname);
-		}
+			}
 	} else {
+		read_unlock(&current->tsk_vt_rwlock);
 		ret = i;
 	}
 	return ret;

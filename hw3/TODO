@@ -1,6 +1,18 @@
 -----Sagar--------
 1. Remove files tp.c, tp2.c from hw3 folder
-
+2. Remove warning ioctl.c: 618
+Rough README:
+Locking sematics:
+	Every Task will have lock(task_vt_lock) that we will take and release as follows:
+		i. Every system call by that task should take read lock
+		ii. Every change_vt will take write lock
+		iii. Take write lock on dec_rc_vt
+	The vt_lock will be used as follows:
+		i. Take write lock on register_vt and deregister_vt operation
+		ii. Take read lock after taking task_vt_lock when doing change_vt
+		iii. Take read lock when taking sys_getvtbyid, is_implemented_by_vt
+		iV. Take read lock in get_vt operaion, get_vt_id_list
+	task_vt_lock should be taken before vt_lock	
 
 -----Kunal-------
 1. Remove var_arg.c

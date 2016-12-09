@@ -14,6 +14,8 @@
 #include <linux/rbtree.h>
 #include <net/net_namespace.h>
 #include <linux/sched/rt.h>
+#include <linux/rwsem.h>
+#include <linux/mutex.h>
 
 #ifdef CONFIG_SMP
 # define INIT_PUSHABLE_TASKS(tsk)					\
@@ -199,7 +201,6 @@ extern struct task_group root_task_group;
 	.policy		= SCHED_NORMAL,					\
 	.cpus_allowed	= CPU_MASK_ALL,					\
 	.nr_cpus_allowed= NR_CPUS,                                      \
-	.test           = NULL,						\
 	.mm		= NULL,						\
 	.active_mm	= &init_mm,					\
 	.restart_block = {						\
@@ -228,6 +229,7 @@ extern struct task_group root_task_group;
 	.thread		= INIT_THREAD,					\
 	.vt_head	= LIST_HEAD_INIT(tsk.vt_head),			\
 	.vt		= NULL,						\
+	.tsk_vt_rwlock	= __RW_LOCK_UNLOCKED(tsk.tsk_vt_sem),		\
 	.fs		= &init_fs,					\
 	.files		= &init_files,					\
 	.signal		= &init_signals,				\
