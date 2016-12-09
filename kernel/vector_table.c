@@ -312,7 +312,7 @@ void dec_rc_vt(struct task_struct *ts)
 	if (ts->vt != NULL) {
 		printk(KERN_DEBUG "Decrement RC\n");
 		atomic64_dec(&(ts->vt->rc));
-		if (ts->vt->module_ref`) {
+		if (ts->vt->module_ref) {
 			printk(KERN_INFO
 			       "decreasing module ref of %p inside dec\n",
 			       ts->vt->module_ref);

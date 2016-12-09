@@ -65,7 +65,7 @@ int main(int argc, const char *argv[])
 		if(fret==0)
 		{
 
-			printf("Child's child vtid is:%d\n",syscall(330));
+			printf("Child's child vtid is:%ld\n",syscall(330));
 			printf("waiting...\nEnter any number to continue...\n");
 			scanf("%d", &i);
 			return 0;
