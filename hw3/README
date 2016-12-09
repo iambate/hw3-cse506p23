@@ -1,0 +1,45 @@
+EAD ME  GROUP:23----------------------------------------------------------------------
+1. Sagar Shah ()
+2. Kunal Shah ()
+3. Swetambari Verma (110932325)
+4. Swatilekha Chaudhary ()
+
+Linux prohibits a loadable module from changing the global system call
+vector/table.  Linux makes it hard to change system calls, either globally
+or on a per process (or process group) basis.  Having different syscalls per
+process is useful for various scenarios.Our purpose is to have a different set of syscalls on per process basis.
+
+
+----------------
+VECTOR TABLE AND
+IOCTL
+
+
+
+
+---------------------
+REGISTER AND DE-REGISTER
+
+
+
+
+
+
+-------------------------
+EXTENDED SYSTEM CALLS
+--System Call Wrapping
+--System Call Inheritance
+
+
+
+
+------------------------
+CLONE/CLONE2
+--System call inheritance
+
+
+-----------------------
+LOCKING
+
+
+
