@@ -70,6 +70,11 @@ IMPORTANT FILES IN MAIN KERNEL:
 8. include/linux/init_task.h
 	This file was changed to change the initailization of task for process INIT
 
+9. fs/open.c
+	This file was changed to change the main open & close system call to provide wrapper functionality
+	that decides which implementation of open & close should be called respectively
+	corresponding to vector table of calling process
+
 ----------------
 Top level design, implementation and extension
 	The design is similar to vfs. Our design provides abstraction of what implementation of syscall
