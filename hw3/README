@@ -12,11 +12,12 @@ process is useful for various scenarios.Our purpose is to have a different set o
 ---------------
 BUILD STEPS AND IMPORTANT FILES:
 1. cd /usr/src/hw3-cse506p23/ (source folder)
-2. cp -f kernel.config .config
+2. cp -f hw3/kernel.config .config
 3. make; make modules_install; make install
 4. reboot
 5. cd /usr/src/hw3-cse506p23/hw3
-	insmod sys_clone2.ko
+	sh install_module.sh
+		- it installs sys_clone2.ko module
 		- sys_clone.ko module contains functionality of clone2 system call
 	insmod module_1.ko
 		- module_1.ko contains two vectors having new of definition of few system calls
@@ -91,7 +92,22 @@ clone2
 
 -----------------------
 LOCKING
-
+The following locking semantics gaurantees that there is no race condition and deadlocks with no delay:
+        * Every Task has lock(task_vt_lock) that we take and release as follows
+                i. Every system call by that task takes read lock whenever
+		   it access vt to figure out current vector_table's system call function
+                ii. Every change_vt (change the vector table of this task/process) takes write lock
+                iii. We take write lock in dec_rc_vt (on exit of process)
+                iv. We take read lock in sys_getvtbyid (get current task's vector ID)
+                v. We take read lock in getvtbytask (get given task's vector ID)
+        * The vt_lock will be used as follows
+                i. We take write lock on register_vt (Add new vector_table) and
+		   deregister_vt (Remove exisiting vector_table) operation
+                ii. We take read lock after taking task_vt_lock when doing
+		    change_vt (change the vector table of this task/process)
+                iii. We take read lock in get_vt( get vector table having given ID) operaion,
+		    get_vt_id_list (get info of all vector table)
+        * task_vt_lock is taken before vt_lock (This order ensures no deadlock)
 
 -------------------
 SPECIAL BEHAVIOR

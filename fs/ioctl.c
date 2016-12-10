@@ -651,7 +651,7 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		/* Fetching PID of a process */
 		pid_struct = find_get_pid(k_args->process_id);
 		if (pid_struct == NULL) {
-			ret = 888;
+			ret = -888;
 			printk("Invalid PID\n");
 			goto err1;
 		}
@@ -661,7 +661,7 @@ int do_vfs_ioctl(struct file *filp, unsigned int fd, unsigned int cmd,
 		vt_id = getvtbytask(tsk);
 		if (vt_id == k_args->vector_table_id) {
 			printk("Process ID already assigned to the Vector Table ID\n");
-			ret = 999;
+			ret = -999;
 			goto err1;
 		}
 
@@ -705,7 +705,7 @@ err:
 			goto err2;
 		pid_struct = find_get_pid(k_args->process_id);
 		if (pid_struct == NULL) {
-			ret = 888;
+			ret = -888;
 			printk("Invalid PID\n");
 			goto err2;
 		}
