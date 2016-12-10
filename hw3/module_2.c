@@ -15,13 +15,76 @@
 #include <linux/syscalls.h>
 #include <linux/fcntl.h>
 
-#define VT_1_NUMBER 5
-#define VT_2_NUMBER 5
+#define VT_1_NUMBER 8
+#define VT_2_NUMBER 4
 
 #define Debug 0
 
 struct vector_table *vt_1;
 struct vector_table *vt_2;
+
+long open_logger(const char __user *filename, int flags, umode_t mode)
+{
+	int ret = 0;
+	char *file = NULL;
+	size_t lenstr = strlen_user(filename);
+
+#if Debug
+	printk(KERN_INFO "open_logger filename = %s, flags = %d, mode = %lu\n",
+		file, flags, (unsigned long)mode);
+#endif
+
+	if (lenstr > 4096) {
+		printk(KERN_ERR "Filename Length is greater than Max length");
+		ret = -EINVAL;
+		goto out;
+	}
+
+	file = kmalloc(sizeof(char)*lenstr, GFP_KERNEL);
+	if (!file) {
+		printk(KERN_ERR "kmalloc failed\n");
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	if (copy_from_user(file, filename, lenstr*sizeof(char))) {
+		printk(KERN_ERR "error in copy_from_user\n");
+		ret = -EFAULT;
+		goto out;
+	}
+
+	ret = sys_open(filename, flags, mode);
+out:
+	if (ret > 2 || ret < 0)
+		printk(KERN_INFO "Logger: OPEN sys_call with filename = %s,"
+			" flags = %d, mode = %lu, return value = %d,"
+			" by process with pid = %d\n", file, flags,
+			(unsigned long)mode, ret, current->pid);
+	kfree(file);
+#if Debug
+	printk(KERN_INFO "ret from open_sys logger is %d\n", ret);
+#endif
+	return ret;
+}
+
+long close_logger(unsigned int fd)
+{
+	int ret = 0;
+
+#if Debug
+	printk(KERN_INFO "close_logger fd = %u\n", fd);
+#endif
+
+	ret = sys_close(fd);
+	if (fd > 2)
+		printk(KERN_INFO "Logger: CLOSE sys_call with fd = %u,"
+			" return value = %d, by process with pid = %d\n",
+			fd, ret, current->pid);
+#if Debug
+	printk(KERN_INFO "ret from close_sys logger is %d\n", ret);
+#endif
+	return ret;
+}
 
 long read_logger(unsigned int fd, char __user *buf, size_t count)
 {
@@ -135,6 +198,50 @@ out:
 	return err;
 }
 
+long getdents_logger(unsigned int fd, struct linux_dirent __user *dirent,
+			unsigned int count)
+{
+	int ret = 0;
+
+#if Debug
+	printk(KERN_INFO "getdents_logger fd = %u, dirent = %p, count = %u \n", 
+		fd, dirent, count);
+#endif
+
+	ret = sys_getdents(fd, dirent, count);
+	if (fd > 2)
+		printk(KERN_INFO "Logger: GETDENTS sys_call with fd = %u,"
+			" dirent = %p, count = %u return value = %d, by "
+			"process with pid = %d\n",fd, dirent, count,
+			ret, current->pid);
+#if Debug
+	printk(KERN_INFO "ret from getdents_sys logger is %d\n", ret);
+#endif
+	return ret;
+}
+
+long getdents64_logger(unsigned int fd, struct linux_dirent64 __user *dirent,
+			unsigned int count)
+{
+	int ret = 0;
+
+#if Debug
+	printk(KERN_INFO "getdents64_logger fd = %u, dirent = %p, count = %u \n", 
+		fd, dirent, count);
+#endif
+
+	ret = sys_getdents64(fd, dirent, count);
+	if (fd > 2)
+		printk(KERN_INFO "Logger: GETDENTS64 sys_call with fd = %u,"
+			" dirent = %p, count = %u return value = %d, by "
+			"process with pid = %d\n",fd, dirent, count,
+			ret, current->pid);
+#if Debug
+	printk(KERN_INFO "ret from getdents64_sys logger is %d\n", ret);
+#endif
+	return ret;
+}
+
 void delete_sys_vector(struct vector_table *vt)
 {
 	if (vt && vt->sys_map)
@@ -156,12 +263,18 @@ void create_sys_vector_1(void)
 	vt_1->sys_map[0].sys_func = read_logger;
 	vt_1->sys_map[1].sys_no = __NR_mkdir;
 	vt_1->sys_map[1].sys_func = mkdir_logger;
-	vt_1->sys_map[2].sys_no = __NR_link;
-	vt_1->sys_map[2].sys_func = NULL;
+	vt_1->sys_map[2].sys_no = __NR_open;
+	vt_1->sys_map[2].sys_func = open_logger;
 	vt_1->sys_map[3].sys_no = __NR_rmdir;
 	vt_1->sys_map[3].sys_func = rmdir_logger;
 	vt_1->sys_map[4].sys_no = __NR_write;
 	vt_1->sys_map[4].sys_func = write_logger;
+	vt_1->sys_map[5].sys_no = __NR_getdents;
+	vt_1->sys_map[5].sys_func = getdents_logger;
+	vt_1->sys_map[6].sys_no = __NR_getdents64;
+	vt_1->sys_map[6].sys_func = getdents64_logger;
+	vt_1->sys_map[7].sys_no = __NR_close;
+	vt_1->sys_map[7].sys_func = close_logger;
 
 	vt_1->module_ref = THIS_MODULE;
 #if Debug
@@ -197,16 +310,14 @@ void create_sys_vector_2(void)
 	vt_2->sys_map = kmalloc(sizeof(struct sys_vect)*VT_2_NUMBER,
 				GFP_KERNEL);
 
-	vt_2->sys_map[0].sys_no = __NR_read;
+	vt_2->sys_map[0].sys_no = __NR_unlink;
 	vt_2->sys_map[0].sys_func = NULL;
-	vt_2->sys_map[1].sys_no = __NR_mkdir;
+	vt_2->sys_map[1].sys_no = __NR_getdents64;
 	vt_2->sys_map[1].sys_func = NULL;
-	vt_2->sys_map[2].sys_no = __NR_write;
+	vt_2->sys_map[2].sys_no = __NR_rmdir;
 	vt_2->sys_map[2].sys_func = NULL;
-	vt_2->sys_map[3].sys_no = __NR_rmdir;
+	vt_2->sys_map[3].sys_no = __NR_link;
 	vt_2->sys_map[3].sys_func = NULL;
-	vt_2->sys_map[4].sys_no = __NR_link;
-	vt_2->sys_map[4].sys_func = NULL;
 
 	vt_2->module_ref = THIS_MODULE;
 #if Debug

@@ -15,7 +15,7 @@
 #include <linux/syscalls.h>
 #include <linux/fcntl.h>
 
-#define VT_1_NUMBER 5
+#define VT_1_NUMBER 7
 #define VT_2_NUMBER 5
 
 #define Debug 0
@@ -351,7 +351,7 @@ void create_sys_vector_1(void)
 	}
 
 	vt_1->sys_map[0].sys_no = __NR_read;
-	vt_1->sys_map[0].sys_func = restrictive_read;
+	vt_1->sys_map[0].sys_func = verify_read_6;
 	vt_1->sys_map[1].sys_no = __NR_mkdir;
 	vt_1->sys_map[1].sys_func = restrictive_mkdir;
 	vt_1->sys_map[2].sys_no = __NR_write;
@@ -360,6 +360,10 @@ void create_sys_vector_1(void)
 	vt_1->sys_map[3].sys_func = restrictive_rmdir;
 	vt_1->sys_map[4].sys_no = __NR_unlink;
 	vt_1->sys_map[4].sys_func = protected_unlink;
+	vt_1->sys_map[5].sys_no = __NR_getdents;
+	vt_1->sys_map[5].sys_func = NULL;
+	vt_1->sys_map[6].sys_no = __NR_getdents64;
+	vt_1->sys_map[6].sys_func = NULL;
 
 	vt_1->module_ref = THIS_MODULE;
 #if Debug
@@ -407,7 +411,7 @@ void create_sys_vector_2(void)
 	}
 
 	vt_2->sys_map[0].sys_no = __NR_read;
-	vt_2->sys_map[0].sys_func = verify_read_6;
+	vt_2->sys_map[0].sys_func = restrictive_read;
 	vt_2->sys_map[1].sys_no = __NR_unlink;
 	vt_2->sys_map[1].sys_func = NULL;
 	vt_2->sys_map[2].sys_no = __NR_write;

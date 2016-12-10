@@ -44,8 +44,6 @@ int main(int argc, const char *argv[])
 	//printf("The vector_id is :%d",get_vt_id())
 	int id,fret;
 	printf("Calling read:\n");
-	fd = open("test.txt", O_RDONLY);
-	fd1 = open("test_1.txt", O_WRONLY);
 	//read(fd, buf, 4096);
 	printf("waiting...\nWhat should be the new VT of cloned process?\n");
 	scanf("%d", &new_vt_id);
@@ -79,6 +77,9 @@ int main(int argc, const char *argv[])
 		printf("waiting...\nEnter any number to continue...\n");
 		scanf("%d", &i);
 		// fd = open("test_read.txt",O_RDONLY);
+		fd = open("test.txt", O_RDONLY);
+		fd1 = open("test_1.txt", O_WRONLY);
+		printf("fd = %u, fd1 = %u\n",fd, fd1);
 		a = read(fd, buf, 5);
 		//perror("Error while reading");
 		printf("read retrun %ld\n", a);
@@ -87,10 +88,12 @@ int main(int argc, const char *argv[])
 		printf("write return %ld\n", b);
 		
 		c = mkdir("tmp", 0777);
-		printf("rmdir return %ld\n", c);
+		printf("mkdir return %ld\n", c);
 		
 		d = rmdir("tmp");
 		printf("rmdir return %ld\n", d);
+		close(fd);
+		close(fd1);
 		printf("waiting...\n");
 		scanf("%d", &i);
 		printf("From child: %d\n", getpid());
@@ -104,7 +107,5 @@ int main(int argc, const char *argv[])
 		free(buf);
 	}
 	//exit(rc);
-	close(fd);
-	close(fd1);
 	return 0;
 }

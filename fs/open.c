@@ -1059,9 +1059,6 @@ SYSCALL_DEFINE3(open_wrapper, const char __user *, filename, int, flags, umode_t
 
 }
 
-
-
-
 SYSCALL_DEFINE4(openat, int, dfd, const char __user *, filename, int, flags,
 		umode_t, mode)
 {
