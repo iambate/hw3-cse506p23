@@ -32,7 +32,7 @@ int pass_to_kernel(int argc, char **argv)
 {
 	char *filepath;
 	int fdesc = 0;
-	int retVal = 0;
+	int retVal = 0, err_no;
 
 	struct var_args *args;
 	struct vt_id_list *vt;
@@ -52,6 +52,7 @@ int pass_to_kernel(int argc, char **argv)
 			vt->vt_ids_info = (char *)malloc(4096);
 			vt->vt_ids_info_len = 4096;
 			retVal = ioctl(fdesc, GET_FLAG, (unsigned long)vt);
+			err_no = errno;
 			printf("Number of Vector Tables: %d\n",
 							vt->vt_ids_count);
 			if (vt->vt_ids_count != 0)
@@ -71,7 +72,9 @@ int pass_to_kernel(int argc, char **argv)
 					malloc(sizeof(struct var_args));
 			args->process_id = atoi(argv[2]);
 			retVal = ioctl(fdesc, GET_VT, (unsigned long)args);
-			if (retVal == -888)
+			err_no = errno;
+			
+			if (err_no == 888)
 				printf("Invalid PID\n");
 			else {
 				printf("Process ID: %d\n", args->process_id);
@@ -90,10 +93,11 @@ int pass_to_kernel(int argc, char **argv)
 			args->process_id = atoi(argv[1]);
 			args->vector_table_id = atoi(argv[2]);
 			retVal = ioctl(fdesc, SET_FLAG, (unsigned long)args);
-			if (retVal == -999) {
+			err_no = errno;
+			if (err_no == 999) {
 				printf("Process ID already assigned");
 				printf("to the Vector Table ID\n");
-			} else if (retVal == -888)
+			} else if (err_no == 888)
 			printf("Invalid PID\n");
 			else if (retVal != 0)
 			printf("Invalid Process ID/Vector Table ID: %d\n",
