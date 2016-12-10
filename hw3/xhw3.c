@@ -39,27 +39,21 @@ int main(int argc, const char *argv[])
 	int rc, fd, fd1, i, new_vt_id = 1;
 	long a, b, c, d;
 	char *buf = (char *)malloc(4096);
-	//unsigned long CLONE2_FLAG = 4096;
-	//printf("Before clone2 call:\nParent process ID : %d\n", getpid());
-	//printf("The vector_id is :%d",get_vt_id())
 	int id,fret;
 	printf("Calling read:\n");
-	//read(fd, buf, 4096);
+
 	printf("waiting...\nWhat should be the new VT of cloned process?\n");
 	scanf("%d", &new_vt_id);
-	//rc = syscall(__NR_clone, SIGCHLD,0,NULL,NULL,0);
+
 	rc = syscall(__NR_clone2, SIGCHLD , 0, NULL, NULL, 0, new_vt_id);
-	printf("PID 1: %d\n", getpid());
 	if (rc == 0) {
 		printf("syscall returned %d (errno=%d)\n", rc, errno);
-		//printf("From child: %d\n", getpid());
+
 		id = syscall(__NR_getvtbyid);
 		printf("waiting id in chidl is:%d\n",id);
-		// int r=0;
-		// r = link("a.protected","b.txt");
-		// unlink("a.protected");
+
 		fret = syscall(__NR_clone, SIGCHLD,0,NULL,NULL,0);
-		
+
 		if(fret==0)
 		{
 
@@ -69,19 +63,20 @@ int main(int argc, const char *argv[])
 			return 0;
 		}
 		else {
+			printf("PID 1: %d\n", getpid());
 			wait(NULL);
 		}
-		printf("PID 2: %d\n", getpid());
+
 		wait(NULL);
-		// printf("Calling read:\n");
+
 		printf("waiting...\nEnter any number to continue...\n");
 		scanf("%d", &i);
-		// fd = open("test_read.txt",O_RDONLY);
+
 		fd = open("test.txt", O_RDONLY);
 		fd1 = open("test_1.txt", O_WRONLY);
 		printf("fd = %u, fd1 = %u\n",fd, fd1);
 		a = read(fd, buf, 5);
-		//perror("Error while reading");
+
 		printf("read retrun %ld\n", a);
 		
  		b = write(fd1, buf, 5);
@@ -101,11 +96,11 @@ int main(int argc, const char *argv[])
 		free(buf);
 	} else {
 		wait(NULL);
+		printf("PID 2: %d\n", getpid());
 		id=syscall(330);
 		printf("\nwaiting id in parent is:%d\n",id);
 		printf("syscall returned %d\n", rc);
 		free(buf);
 	}
-	//exit(rc);
 	return 0;
 }
