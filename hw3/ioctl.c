@@ -76,7 +76,7 @@ int pass_to_kernel(int argc, char **argv)
 			else {
 				printf("Process ID: %d\n", args->process_id);
 				printf("Corresponding Vector Table ID: %d\n",
-								args->vector_table_id);
+							args->vector_table_id);
 			}
 			free(args);
 		} else if ((strcmp(argv[1], "get") == 0) &&
@@ -94,14 +94,14 @@ int pass_to_kernel(int argc, char **argv)
 				printf("Process ID already assigned");
 				printf("to the Vector Table ID\n");
 			} else if (retVal == -888)
-				printf("Invalid PID\n");				
+			printf("Invalid PID\n");
 			else if (retVal != 0)
-				printf("Invalid Process ID/Vector Table ID: %d\n",
-									retVal);
+			printf("Invalid Process ID/Vector Table ID: %d\n",
+								retVal);
 			else {
-				printf("Process ID");
-				printf(" %d assigned to the Vector Table ID %d\n",
-					args->process_id, args->vector_table_id);
+			printf("Process ID");
+			printf(" %d assigned to the Vector Table ID %d\n",
+			args->process_id, args->vector_table_id);
 			}
 			free(args);
 		} else {
