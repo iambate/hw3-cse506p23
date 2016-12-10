@@ -1,4 +1,3 @@
-obj-m += var_arg.o
 obj-m += module_1.o
 obj-m += sys_clone2.o
 obj-m += module_2.o

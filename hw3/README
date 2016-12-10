@@ -15,7 +15,7 @@ BUILD STEPS AND IMPORTANT FILES:
 2. cp -f hw3/kernel.config .config
 3. make; make modules_install; make install
 4. reboot
-5. cd /usr/src/hw3-cse506p23/hw3
+5. cd /usr/src/hw3-cse506p23/hw3; make
 	sh install_module.sh
 		- it installs sys_clone2.ko module
 		- sys_clone.ko module contains functionality of clone2 system call
@@ -36,10 +36,61 @@ BUILD STEPS AND IMPORTANT FILES:
 		- Set the vector table of process with pid <pid> to vector table having vector id <vector_id>
 
 ----------------
-VECTOR TABLE AND
+IMPORTANT FILES IN MAIN KERNEL:
+1. include/linux/vector_table.h
+	This is a new file that contains all the prototype of function and structure that provide the functionality
+	to provide a platform for multiple syscalls
+
+2. kernel/vector_table.c
+	This is a new file that implementation of all functions that are defined in vector_table.h
+
+3. fs/ioctl.c
+	This file is changed to support additional flags by ioctl to getall vectors and its details,
+	get vector of particular process and to set a particular process to one of the availble vector id
+
+4. fs/read_write.c
+	This file was changed to change the main read & write system call to provide wrapper functionality
+	that decides which implementation of read & write should be called respectively
+	corresponding to vector table of calling process
+
+5. fs/readdir.c
+	This file was changed to change the main getdents & getdents64 system call to provide wrapper functionality
+	that decides which implementation of getdents & getdents64 should be called respectively
+	corresponding to vector table of calling process
+
+6. fs/namei.c
+	This file was changed to change the main mkdir, rmdir, link & unlink system call to provide wrapper functionality
+	that decides which implementation of mkdir, rmdir, link & unlink should be called respectively
+	corresponding to vector table of calling process
+
+
+----------------
 IOCTL
+	Added multiple CASEs to "do_vfs_ioctl" function in /fs/ioctl.c.
+	IOCTL IMPLEMENTATION
+
+	./ioctl getall     
+		- List all the vector tables with their IDs and Reference Counts.
+			"GET_FLAG" passed as ioctl system call parameter.
+			All the vector tables are listed through get_vt_id_list() function in kernel/vector_table.c.
+
+	./ioctl get <process ID>
+		- List the corresponding vector table ID of the provided Process ID.
+			"GET_VT" passed as ioctl system call parameter.
 
 
+	./ioctl <Process ID> <Vector Table ID>
+		- Assign the Process ID to the Vector Table ID.
+			"SET_FLAG" passed as ioctl system call parameter.
+			Verifies if the process is already assigned to the entered vector table ID 
+				through getvtbytask(struct task_struct *tsk) function in kernel/vector_table.c.
+			If not, assigns the process ID to the corresponding vector table ID
+				through change_vt function in kernel/vector_table.c.
+
+	Error Handled for Invalid Arguments:
+		- Incorrect number of arguments
+		- Invalid Process IDs
+		- Invalid Vector Table IDs
 
 
 ---------------------
@@ -94,7 +145,7 @@ Loadable Modules Design, Implementation and Extension
 				other vector id or terminates.
 
 				- proecess when newly created with the vector id increments the reference count of module.
-	Sys_vect Design:
+	sys_vect Design:
 
 		Members:
 			a. sys_no:
@@ -194,21 +245,34 @@ clone2
 -----------------------
 LOCKING
 The following locking semantics gaurantees that there is no race condition and deadlocks with no delay:
-        * Every Task has lock(task_vt_lock) that we take and release as follows
+        * Every Task has lock(task_vt_lock) that we use as follows
+		This lock is taken whenever task want to access(read, write, change) it vt pointer
+
                 i. Every system call by that task takes read lock whenever
 		   it access vt to figure out current vector_table's system call function
                 ii. Every change_vt (change the vector table of this task/process) takes write lock
                 iii. We take write lock in dec_rc_vt (on exit of process)
                 iv. We take read lock in sys_getvtbyid (get current task's vector ID)
                 v. We take read lock in getvtbytask (get given task's vector ID)
-        * The vt_lock will be used as follows
+
+        * list of vector table has lock (vt_lock) that we use as follows
+		This lock is taken whenever list of vector table is accessed
+		(iteration though list for reading all member or for deletion)
+		This lock is not to be taken if we already have a pointer to vector_table i.e.
+		read or writing to node of list of vector table doesn't need this lock
+
                 i. We take write lock on register_vt (Add new vector_table) and
 		   deregister_vt (Remove exisiting vector_table) operation
                 ii. We take read lock after taking task_vt_lock when doing
 		    change_vt (change the vector table of this task/process)
                 iii. We take read lock in get_vt( get vector table having given ID) operaion,
 		    get_vt_id_list (get info of all vector table)
+
         * task_vt_lock is taken before vt_lock (This order ensures no deadlock)
+	* The only element that is written to in vector_table is rc and that is atomic64
+		rc is incremented when process is assigned that particular vector and
+		decremented when process is deassigned or when process is exiting
+
 
 -------------------
 Technical Process Flow:
