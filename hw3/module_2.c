@@ -204,7 +204,7 @@ long getdents_logger(unsigned int fd, struct linux_dirent __user *dirent,
 	int ret = 0;
 
 #if Debug
-	printk(KERN_INFO "getdents_logger fd = %u, dirent = %p, count = %u \n", 
+	printk(KERN_INFO "getdents_logger fd = %u, dirent = %p, count = %u \n",
 		fd, dirent, count);
 #endif
 
@@ -212,7 +212,7 @@ long getdents_logger(unsigned int fd, struct linux_dirent __user *dirent,
 	if (fd > 2)
 		printk(KERN_INFO "Logger: GETDENTS sys_call with fd = %u,"
 			" dirent = %p, count = %u return value = %d, by "
-			"process with pid = %d\n",fd, dirent, count,
+			"process with pid = %d\n", fd, dirent, count,
 			ret, current->pid);
 #if Debug
 	printk(KERN_INFO "ret from getdents_sys logger is %d\n", ret);
@@ -226,7 +226,7 @@ long getdents64_logger(unsigned int fd, struct linux_dirent64 __user *dirent,
 	int ret = 0;
 
 #if Debug
-	printk(KERN_INFO "getdents64_logger fd = %u, dirent = %p, count = %u \n", 
+	printk(KERN_INFO "getdents64_logger fd = %u, dirent = %p, count = %u \n",
 		fd, dirent, count);
 #endif
 
@@ -234,7 +234,7 @@ long getdents64_logger(unsigned int fd, struct linux_dirent64 __user *dirent,
 	if (fd > 2)
 		printk(KERN_INFO "Logger: GETDENTS64 sys_call with fd = %u,"
 			" dirent = %p, count = %u return value = %d, by "
-			"process with pid = %d\n",fd, dirent, count,
+			"process with pid = %d\n", fd, dirent, count,
 			ret, current->pid);
 #if Debug
 	printk(KERN_INFO "ret from getdents64_sys logger is %d\n", ret);
