@@ -1,6 +1,6 @@
 READ ME  GROUP:23----------------------------------------------------------------------
 1. Sagar Shah (110958554)
-2. Kunal Shah ()
+2. Kunal Shah (110974215)
 3. Swetambari Verma (110932325)
 4. Swatilekha Chaudhary ()
 
@@ -43,12 +43,75 @@ IOCTL
 
 
 ---------------------
-REGISTER AND DE-REGISTER
+Loadable Modules Design, Implementation and Extension
 
+	Vector Table Node Design:
 
+		Members:
+			a. id:
+				- Vector id is stored in this member
+				- This member is integer as PID is INT and id shouldn't greater than PID
+			b. rc:
+				- reference count of vector is stored in this vector
+				- This is of type atomic64_t
+					- atomic is used as reference count should be incremented/decremented atomically by the system
+					- 64 because system can support at max that many processes
+				- this is incremented when the process uses this vector for its functionality and decreased when it changes to other vector or it terminates.
+			c. vt_list:
+				- this is the reference to head of list mantaining all the vectors
+				- there was a need to mantain list of all the system call vectors.
+				- the best way to mantain list in kernel is using list_head and thus we also have this as list_head
+			d. sys_map_size:
+				- this mantains the number of system_calls which are customized
+				- this is require for iterating over the next member mentioned here
+			e. sys_map:
+				- this is pointer to the sys_map array dynamically allocated by the Module Developer in the module
+				- This will reduce the overall structure size of vector table node by great extent and thus we can have better efficiency in fetching to cache and will also reduce process stack size by lot.
+				- This being just a reference, will require the number of elements to iterate over array and thus above mentioned member is required
+				- Allowing this structure to be dynamically allocated supports ease in extension for support of other systems calls thus supporting the iterative model of development used in industry
+				- This is one of the reasons for enabling feature of supporting multiple vectors in a module
+			f. module_ref:
+				- this variable is required to mantain the reference count of the modules used by various processes and thus preventing the removal of the module using rmmod in case a process is using any vector of the module.
+				- process increases the reference count of the module using this member whenever a vector id is referenced for its execution and decremented when it changes to other vector id or terminates.
+				- proecess when newly created with the vector id increments the reference count of module.
+	Sys_vect Design:
 
-
-
+		Members:
+			a. sys_no:
+				- This member saves the sys_call number which is customized i.e. don't have to use its default implementation
+			b. sys_func:
+				- this member is NULL if this sys_call should not be allowed to execute(denied functionality).
+				- this memeber contains function pointer to the custom function which has same prototype as the default system call
+				- this member is void pointer as it can support any function pointer
+				- it will be used after typecasting as required by particular system call
+			c. Note:
+				1. Don't add sys_call numbers which needs to implement by default
+				2. if the system call number is not present it is considered default system call needs to be executed
+		
+		Design Decisions:
+			- Function Pointers is used for following reasons
+				- Ease in switching the functionality of a system call just need to change in module thus great for extension or overhaul in case of future
+				- reduces the overhead while calling any function on fly as no mapping is required to particular module
+				- supports the complete namespace i.e. doesn't depend on whether a function with similar name is defined by other module or no.
+				- this will help if other module needs to use a function of other module as well as this is supported by linux itself.
+			- this type of design leads to less size of the sys_map array overall and thus while deciding on fly whether to call the default or custom function in quite less time considering any user of this functionality will always modify minority of the total system calls supported by OS.
+				
+	Steps for New Module Developer (Advisable steps):
+		1.  Create New Custom Defined Functions
+		2.	Create a function to register a system vector
+				a. Allocate Memory for the Vector Table Node (struct vector_table) referred as VTN ahead
+				b. Fill in the contents of VTN
+						- Allocate memory for VTN->sys_map according as per the Number of system calls which are customized(new overridden syscalls / sys_calls that are to be denied)
+						- Fill in the sys_map for a particular sys_call with the sys_call number and function pointer to  newly defined or NULL if need to be denied
+						- Add module reference pointer
+				c. call API function "register_vt"
+		3. Registering of Module should create all the system call vectors required by the developer
+		4. Deregistering of Module should delete all system call vectors
+				a. call API function "deregister_vt"
+				b. Free the VTN->sys_map for each system call vector 
+				c. Free the VTN for all system call vector
+		5. Note:
+				Developer can create a general function for deleting and deregistering for any number of sys_call vectors irrespective of design thus reducing developers effort as well as keeping code modular.
 
 -------------------------
 EXTENDED SYSTEM CALLS
