@@ -63,6 +63,41 @@ IMPORTANT FILES IN MAIN KERNEL:
 	that decides which implementation of mkdir, rmdir, link & unlink should be called respectively
 	corresponding to vector table of calling process
 
+7. include/linux/sched.h
+	This file was changed to change the definition of task_struct to make it contain additional member that gives vector_table
+	info. It now also contains locks that are needed to access this vector_table.
+
+8. include/linux/init_task.h
+	This file was changed to change the initailization of task for process INIT
+
+----------------
+Top level design, implementation and extension
+	The design is similar to vfs. Our design provides abstraction of what implementation of syscall
+	needs to be called. Process may have different vector_table which means that a single read call will
+	perform different kind of operation depending on which process is calling. To achieve this we changed the default
+	functionality of syscall to only decide which implementation read to call depending on vector_table/vector_id of process.
+	This function is called sys_$(operation)_wrapper. The kernel code is changed to call this function when user process
+	interrupts to get a service for this operation. E.g. when a user process call read(2), the system will be interrupted to
+	call sys_read_wrapper. The function sys_read_wrapper will decide which implementation of read to call. When vector_table
+	of any process is default or vector_id is zero, then the old implementation of read is called else the implementation of that
+	corresponding vector_table is called.
+
+	The old implementation of syscall is exported as sys_$(operation) i.e. old implemenation of read is exported as sys_read. 
+	task_struct is made a contain an additional member vt that is a struct vector_table pointer. Struct vector_table is defined
+	below. The sys_$(operation)_wrapper will check vt of the calling process to decide the implementaion of $(operation) to call.
+	When vector_table is set to default or vector_id is zero, vt in task_struct is NULL and will call default/old implementation.
+
+	After resigtration that vector table is available to used by any process. Any process can change its vector table to new
+	vector using ioctl syscall or using clone2 syscall. By default, child process will inherit the vector_table of parent.
+
+	Vector table are defined in a module and resigtered.  Each module may contain more than one vector table. Whenever any process
+	any vector_table, its rc is increamented. We cannot uninstall the module if any process is using any of the vector_table defined
+	in that module. New module and vector can be added dynamically.
+ 
+	This design decision was made so as to provide abstraction, polymorphism in the same way as vfs. The changes needed are small with
+	this design and it supports addition of any number of vector_table and any number of different implemenation of system calls.
+
+	For now, we have shown that our design works for ten system calls. We can use the same design to make it work for all syscalls
 
 ----------------
 IOCTL
