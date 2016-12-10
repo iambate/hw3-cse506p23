@@ -1766,7 +1766,7 @@ long _do_fork(unsigned long clone_flags,
 		}
 
 		put_pid(pid);
-		__RW_LOCK_UNLOCKED(p->tsk_vt_rwlock);
+		rwlock_init(&p->tsk_vt_rwlock);
 		if (clone_flags & CLONE_SYSCALL)
 		{
 			p->vt=NULL;
