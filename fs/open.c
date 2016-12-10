@@ -1037,7 +1037,7 @@ long do_sys_open(int dfd, const char __user * filename, int flags, umode_t mode)
 	return fd;
 }
 
-long sys_open(const char __user * filename, int flags, umode_t mode)
+long sys_open(const char __user *filename, int flags, umode_t mode)
 {
 	if (force_o_largefile())
 		flags |= O_LARGEFILE;
@@ -1051,7 +1051,7 @@ SYSCALL_DEFINE3(open_wrapper, const char __user *, filename, int, flags,
 		umode_t, mode)
 {
 
-	long (*open_func) (const char __user * filename, int flags,
+	long (*open_func)(const char __user *filename, int flags,
 			   umode_t mode);
 	ssize_t ret = -EBADF;
 	int i = INT_MAX;
@@ -1135,7 +1135,7 @@ EXPORT_SYMBOL(filp_close);
 SYSCALL_DEFINE1(close_wrapper, unsigned int, fd)
 {
 
-	long (*close_func) (int fd);
+	long (*close_func)(int fd);
 	ssize_t ret = -EBADF;
 	int i = INT_MAX;
 
