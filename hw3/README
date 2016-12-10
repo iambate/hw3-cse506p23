@@ -26,12 +26,14 @@ BUILD STEPS AND IMPORTANT FILES:
 		- module_2.ko contains two vectors having new of definition of few system calls
 		- After insmod, both the system vectors will be registered and each of them will be assigned a unique ID
 		  which we call vector_id
-	./xhw3
-		- xhw3 is a user program that showcases the functionality of clone and clone2 syscalls
+	./test_clone
+	./test2_clone
+		- These are user programs that showcase the functionality of clone and clone2 syscalls
 	./ioctl getall
 		- Print all the available vector table along with its reference count
 	./ioctl <pid> <vector_id>
 		- Set the vector table of process with pid <pid> to vector table having vector id <vector_id>
+
 ----------------
 VECTOR TABLE AND
 IOCTL

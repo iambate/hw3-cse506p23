@@ -51,8 +51,8 @@ int main(int argc, const char *argv[])
 	rc = syscall(__NR_clone2, SIGCHLD, 0, NULL, NULL, 0, new_vt_id);
 	if (rc == 0) {
 		printf("Calling child of child");
-		printf("(To test the default behavior of inheritance)\n");
-		fret = syscall(__NR_clone, SIGCHLD, 0, NULL, NULL, 0);
+		printf("(To test the non default behavior(CLONE_SYSCALLS flag) of inheritance)\n");
+		fret = syscall(__NR_clone, SIGCHLD|CLONE_SYSCALLS, 0, NULL, NULL, 0);
 		if (fret == 0) {
 
 			printf(" Child's child (grand child) has pid: %d, ppid:% d\n", getpid(), getppid());

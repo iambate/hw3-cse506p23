@@ -15,8 +15,9 @@ assign: assign.c
 xhw3: xhw3.c
 	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi xhw3.c -o xhw3
 
-test_clone: test_clone.c
+test_clone: test_clone.c test2_clone.c
 	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi test_clone.c -o test_clone
+	gcc -Wall -I$(INC)/generated/uapi -I$(INC)/uapi test2_clone.c -o test2_clone
 
 
 ioctl: ioctl.c
@@ -30,3 +31,5 @@ clean:
 	rm -f xhw3
 	rm -f ioctl
 	rm -f assign
+	rm -f test_clone
+	rm -f test2_clone
